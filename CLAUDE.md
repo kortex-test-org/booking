@@ -1,2 +1,2 @@
 @AGENTS.md
-@.agents/rules/project-stack.md
+@.agents/rules/project-rules.md

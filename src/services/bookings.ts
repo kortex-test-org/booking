@@ -9,6 +9,15 @@ export interface Booking extends RecordModel {
   stripe_payment_id?: string;
 }
 
+export async function createBooking(data: {
+  user: string;
+  service: string;
+  time_slot: string;
+  status: Booking["status"];
+}): Promise<Booking> {
+  return pb.collection("bookings").create<Booking>(data);
+}
+
 export async function getBookings(): Promise<Booking[]> {
   return pb.collection("bookings").getFullList<Booking>({
     expand: "user,service,time_slot",

@@ -5,13 +5,12 @@ export interface TimeSlot extends RecordModel {
   service: string;
   date: string;
   time: string;
-  is_available: boolean;
 }
 
 export async function getTimeSlots(): Promise<TimeSlot[]> {
   return pb.collection("time_slots").getFullList<TimeSlot>({
     sort: "date,time",
-    expand: "service",
+    expand: "service,bookings_via_time_slot",
   });
 }
 
@@ -20,10 +19,7 @@ export async function createTimeSlot(data: {
   date: string;
   time: string;
 }): Promise<TimeSlot> {
-  return pb.collection("time_slots").create<TimeSlot>({
-    ...data,
-    is_available: true,
-  });
+  return pb.collection("time_slots").create<TimeSlot>(data);
 }
 
 export async function deleteTimeSlot(id: string): Promise<void> {

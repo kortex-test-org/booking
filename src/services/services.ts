@@ -11,3 +11,15 @@ export interface Service extends RecordModel {
 export async function getServices(): Promise<Service[]> {
   return pb.collection("services").getFullList<Service>({ sort: "name" });
 }
+
+export async function createService(data: Omit<Service, keyof import("pocketbase").RecordModel>): Promise<Service> {
+  return pb.collection("services").create<Service>(data);
+}
+
+export async function updateService(id: string, data: Partial<Omit<Service, keyof import("pocketbase").RecordModel>>): Promise<Service> {
+  return pb.collection("services").update<Service>(id, data);
+}
+
+export async function deleteService(id: string): Promise<void> {
+  await pb.collection("services").delete(id);
+}

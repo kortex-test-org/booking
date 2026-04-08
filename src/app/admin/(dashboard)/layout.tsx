@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/organisms/header";
+import { AdminSidebar } from "@/components/organisms/admin-sidebar";
 import { useAuth } from "@/lib/auth-context";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -26,16 +27,20 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex flex-col bg-muted/20">
       <Header />
 
-      <div className="flex-1 container mx-auto px-4 md:px-8 py-8 max-w-5xl">
+      <div className="flex-1 container mx-auto px-4 md:px-8 py-8 max-w-6xl">
         <div className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">
           Админ Панель
         </div>
 
-        <main className="w-full">
-          <div className="bg-background rounded-2xl border shadow-sm p-6 md:p-8 min-h-125">
-            {children}
-          </div>
-        </main>
+        <div className="flex gap-6 items-start">
+          <AdminSidebar />
+
+          <main className="flex-1 min-w-0">
+            <div className="bg-background rounded-2xl border shadow-sm p-6 md:p-8 min-h-125">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );

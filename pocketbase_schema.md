@@ -21,12 +21,11 @@
 
 ### time_slots
 
-| Поле           | Тип                  | Обязательное |
-| -------------- | -------------------- | ------------ |
-| `service`      | Relation → services  | ✅           |
-| `date`         | Text (YYYY-MM-DD)    | ✅           |
-| `time`         | Text (HH:MM)         | ✅           |
-| `is_available` | Bool (default: true) | ✅           |
+| Поле      | Тип                 | Обязательное |
+| --------- | ------------------- | ------------ |
+| `service` | Relation → services | ✅           |
+| `date`    | Text (YYYY-MM-DD)   | ✅           |
+| `time`    | Text (HH:MM)        | ✅           |
 
 ---
 
@@ -87,11 +86,12 @@ NEXT_PUBLIC_POCKETBASE_URL=http://pocketbase-cdvl7muq00j1ch8av5esbgvn.176.112.15
 GET /api/collections/services/records
 ```
 
-### Получить доступные слоты для услуги
+### Получить слоты для услуги (с букингами для вычисления занятости)
 
 ```
-GET /api/collections/time_slots/records?filter=(service='SERVICE_ID' && is_available=true)
+GET /api/collections/time_slots/records?filter=(service='SERVICE_ID')&expand=bookings_via_time_slot
 ```
+> Слот занят если в `expand.bookings_via_time_slot` есть запись со статусом `pending` или `paid`.
 
 ### Создать бронирование
 

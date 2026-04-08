@@ -13,7 +13,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useTimeSlots, useCreateTimeSlot, useDeleteTimeSlot } from "@/queries/time-slots";
 import { useServices } from "@/queries/services";
-import { useBookings, useUpdateBookingStatus, useDeleteBooking } from "@/queries/bookings";
+import { useBookings, useUpdateBookingStatus, useDeleteBooking, useCreateBooking } from "@/queries/bookings";
+import { useUsers } from "@/queries/users";
 
 const TIME_OPTIONS = [
   "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
@@ -28,19 +29,46 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled: "Отменено",
 };
 
+const EMPTY_BOOKING_FORM = { userId: "", serviceId: "", slotId: "", status: "pending" as const };
+
 export default function AdminDashboardPage() {
-  const [open, setOpen] = useState(false);
+  const [slotOpen, setSlotOpen] = useState(false);
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
   const [newTime, setNewTime] = useState<string | null>(null);
   const [newServiceId, setNewServiceId] = useState<string | null>(null);
 
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingForm, setBookingForm] = useState(EMPTY_BOOKING_FORM);
+
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: slots = [], isLoading: slotsLoading } = useTimeSlots();
   const { data: services = [] } = useServices();
+  const { data: users = [] } = useUsers();
   const createSlot = useCreateTimeSlot();
   const deleteSlot = useDeleteTimeSlot();
   const updateStatus = useUpdateBookingStatus();
   const deleteBooking = useDeleteBooking();
+  const createBooking = useCreateBooking();
+
+  const availableSlotsForForm = slots.filter((s) => {
+    if (bookingForm.serviceId && s.service !== bookingForm.serviceId) return false;
+    const slotBookings: { status: string }[] = s.expand?.bookings_via_time_slot ?? [];
+    return !slotBookings.some((b) => b.status !== "cancelled");
+  });
+
+  function handleCreateBooking() {
+    const { userId, serviceId, slotId, status } = bookingForm;
+    if (!userId || !serviceId || !slotId) return;
+    createBooking.mutate(
+      { user: userId, service: serviceId, time_slot: slotId, status },
+      {
+        onSuccess: () => {
+          setBookingOpen(false);
+          setBookingForm(EMPTY_BOOKING_FORM);
+        },
+      }
+    );
+  }
 
   function handleCreate() {
     if (!newDate || !newTime || !newServiceId) return;
@@ -48,7 +76,7 @@ export default function AdminDashboardPage() {
       { service: newServiceId, date: format(newDate, "yyyy-MM-dd"), time: newTime },
       {
         onSuccess: () => {
-          setOpen(false);
+          setSlotOpen(false);
           setNewDate(undefined);
           setNewTime(null);
           setNewServiceId(null);
@@ -59,9 +87,117 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Управление бронированиями</h1>
-        <p className="text-muted-foreground">Обзор всех записей и их статусов.</p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Управление бронированиями</h1>
+          <p className="text-muted-foreground">Обзор всех записей и их статусов.</p>
+        </div>
+
+        <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
+          <DialogTrigger render={
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              Создать бронь
+            </Button>
+          } />
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Новое бронирование</DialogTitle>
+              <DialogDescription>Создайте бронирование вручную от имени клиента</DialogDescription>
+            </DialogHeader>
+
+            <div className="flex flex-col gap-4 py-2">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium">Клиент</label>
+                <Select
+                  value={bookingForm.userId}
+                  onValueChange={(v) => setBookingForm((f) => ({ ...f, userId: v }))}
+                  itemToStringLabel={(v) => { const u = users.find((x) => x.id === v); return u?.name || u?.email || v; }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Выберите клиента" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name || u.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium">Услуга</label>
+                <Select
+                  value={bookingForm.serviceId}
+                  onValueChange={(v) => setBookingForm((f) => ({ ...f, serviceId: v, slotId: "" }))}
+                  itemToStringLabel={(v) => services.find((s) => s.id === v)?.name ?? v}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Выберите услугу" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium">Слот</label>
+                <Select
+                  value={bookingForm.slotId}
+                  onValueChange={(v) => setBookingForm((f) => ({ ...f, slotId: v }))}
+                  disabled={!bookingForm.serviceId}
+                  itemToStringLabel={(v) => { const s = availableSlotsForForm.find((x) => x.id === v); return s ? `${s.date} · ${s.time}` : v; }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={bookingForm.serviceId ? "Выберите слот" : "Сначала выберите услугу"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableSlotsForForm.length === 0 && (
+                      <SelectItem value="__none" disabled>Нет свободных слотов</SelectItem>
+                    )}
+                    {availableSlotsForForm.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.date} · {s.time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium">Статус</label>
+                <Select
+                  value={bookingForm.status}
+                  onValueChange={(v) => setBookingForm((f) => ({ ...f, status: v as typeof f.status }))}
+                  itemToStringLabel={(v) => STATUS_LABEL[v] ?? v}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Ожидает</SelectItem>
+                    <SelectItem value="paid">Оплачено</SelectItem>
+                    <SelectItem value="cancelled">Отменено</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                disabled={!bookingForm.userId || !bookingForm.serviceId || !bookingForm.slotId || createBooking.isPending}
+                onClick={handleCreateBooking}
+              >
+                {createBooking.isPending ? "Создание..." : "Создать"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="rounded-md border overflow-hidden">
@@ -130,21 +266,25 @@ export default function AdminDashboardPage() {
                           <DropdownMenuLabel>Действия</DropdownMenuLabel>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="cursor-pointer"
-                          onSelect={() => updateStatus.mutate({ id: booking.id, status: "paid" })}
-                        >
-                          Одобрить (paid)
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="cursor-pointer text-destructive"
-                          onSelect={() => updateStatus.mutate({ id: booking.id, status: "cancelled" })}
-                        >
-                          Отменить бронь
-                        </DropdownMenuItem>
+                        {booking.status !== "paid" && (
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={() => updateStatus.mutate({ id: booking.id, status: "paid" })}
+                          >
+                            Одобрить (paid)
+                          </DropdownMenuItem>
+                        )}
+                        {booking.status !== "cancelled" && (
+                          <DropdownMenuItem
+                            className="cursor-pointer text-destructive"
+                            onClick={() => updateStatus.mutate({ id: booking.id, status: "cancelled" })}
+                          >
+                            Отменить бронь
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           className="cursor-pointer text-destructive font-semibold"
-                          onSelect={() => deleteBooking.mutate(booking.id)}
+                          onClick={() => deleteBooking.mutate(booking.id)}
                         >
                           Удалить
                         </DropdownMenuItem>
@@ -161,7 +301,7 @@ export default function AdminDashboardPage() {
       <div className="mt-12">
         <div className="flex items-center justify-between border-b pb-2 mb-4">
           <h2 className="text-xl font-bold tracking-tight">Управление доступностью (Слоты)</h2>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={slotOpen} onOpenChange={setSlotOpen}>
             <DialogTrigger render={
               <Button size="sm">
                 <Plus className="h-4 w-4 mr-1" />
@@ -175,7 +315,7 @@ export default function AdminDashboardPage() {
               </DialogHeader>
               <div className="flex flex-col items-center gap-4 py-2">
                 <div className="w-full px-1">
-                  <Select value={newServiceId ?? ""} onValueChange={setNewServiceId}>
+                  <Select value={newServiceId ?? ""} onValueChange={setNewServiceId} itemToStringLabel={(v) => services.find((s) => s.id === v)?.name ?? v}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Выберите услугу" />
                     </SelectTrigger>
@@ -246,7 +386,8 @@ export default function AdminDashboardPage() {
                 </TableRow>
               )}
               {slots.map((slot) => {
-                const isBooked = !slot.is_available;
+                const slotBookings: { status: string }[] = slot.expand?.bookings_via_time_slot ?? [];
+              const isBooked = slotBookings.some((b) => b.status !== "cancelled");
                 const serviceName = slot.expand?.service?.name ?? "—";
                 return (
                   <TableRow key={slot.id}>
