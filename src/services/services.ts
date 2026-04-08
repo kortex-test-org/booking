@@ -9,7 +9,9 @@ export interface Service extends RecordModel {
 }
 
 export async function getServices(): Promise<Service[]> {
-  return pb.collection("services").getFullList<Service>({ sort: "name" });
+  return pb.collection("services").getFullList<Service>({
+    sort: "name",
+  });
 }
 
 export async function createService(data: Omit<Service, keyof import("pocketbase").RecordModel>): Promise<Service> {

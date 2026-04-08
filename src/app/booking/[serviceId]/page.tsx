@@ -9,11 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Clock, ArrowRight, Loader2, Hourglass } from "lucide-react";
 import { useServices } from "@/queries/services";
 import { useAuth } from "@/lib/auth-context";
+import { pb } from "@/services/pb";
 
 export default function BookingServicePage() {
   const params = useParams();
   const router = useRouter();
-  const [selectedDateTime, setSelectedDateTime] = useState<{ date: Date; time: string } | null>(null);
+  const [selectedDateTime, setSelectedDateTime] = useState<{ date: Date; time: string; slotId: string } | null>(null);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   const { data: services = [], isLoading: isServicesLoading } = useServices();
   const service = services.find((s) => s.id === params.serviceId);
@@ -26,15 +28,45 @@ export default function BookingServicePage() {
     }
   }, [isInitialized, isValid, router]);
 
-  const handleTimeSelect = (date: Date, time: string) => {
-    setSelectedDateTime({ date, time });
+  const handleTimeSelect = (date: Date, time: string, slotId: string) => {
+    setSelectedDateTime({ date, time, slotId });
   };
 
-  const handleProceed = () => {
-    // В реальном приложении здесь будет логика создания бронирования в PocketBase
-    // и редирект на Stripe Checkout
-    if (selectedDateTime) {
-      router.push("/booking/success");
+  const handleProceed = async () => {
+    if (!selectedDateTime || !service) return;
+
+    try {
+      setIsCheckoutLoading(true);
+      
+      // PocketBase хранит токен в памяти/localStorage, а не в куки.
+      // Передаём его явно в заголовке Authorization.
+      const token = pb.authStore.token;
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          serviceId: params.serviceId,
+          timeSlotId: selectedDateTime.slotId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка при создании платежа');
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Произошла ошибка при переходе к оплате. Попробуйте еще раз.');
+    } finally {
+      setIsCheckoutLoading(false);
     }
   };
 
@@ -121,11 +153,20 @@ export default function BookingServicePage() {
                 </div>
                 <Button 
                   className="w-full text-base h-12 shadow-sm rounded-xl group" 
-                  disabled={!selectedDateTime}
+                  disabled={!selectedDateTime || isCheckoutLoading}
                   onClick={handleProceed}
                 >
-                  Оплатить и подтвердить
-                  <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  {isCheckoutLoading ? (
+                    <>
+                      <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                      Обработка...
+                    </>
+                  ) : (
+                    <>
+                      Оплатить и подтвердить
+                      <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </>
+                  )}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground mt-4">
                   Вы будете перенаправлены на защищенную страницу оплаты Stripe
