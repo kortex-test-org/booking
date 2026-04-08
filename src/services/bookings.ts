@@ -24,11 +24,9 @@ export async function getBookings(): Promise<Booking[]> {
   });
 }
 
-export async function getUserBookings(userId: string): Promise<Booking[]> {
+export async function getUserBookings(): Promise<Booking[]> {
   return pb.collection("bookings").getFullList<Booking>({
-    filter: `user = "${userId}"`,
-    expand: "service,time_slot",
-    sort: "-created",
+    requestKey: null,
   });
 }
 

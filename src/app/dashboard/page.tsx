@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { BookingCard, type BookingStatus } from "@/components/molecules/booking-card";
 import { useAuth } from "@/lib/auth-context";
 import { getUserBookings, type Booking } from "@/services/bookings";
-import type { Service } from "@/services/services";
-import type { TimeSlot } from "@/services/time-slots";
+import { getServices, type Service } from "@/services/services";
+import { getTimeSlotsBasic, type TimeSlot } from "@/services/time-slots";
 import { Loader2 } from "lucide-react";
 
 function formatDate(dateStr: string): string {
@@ -26,21 +27,48 @@ function formatTime(startTime: string, durationMinutes: number): string {
 }
 
 export default function DashboardPage() {
-  const { record, isValid } = useAuth();
+  const { record, isValid, isInitialized } = useAuth();
+  const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [services, setServices] = useState<Map<string, Service>>(new Map());
+  const [timeSlots, setTimeSlots] = useState<Map<string, TimeSlot>>(new Map());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isValid || !record?.id) {
-      setLoading(false);
-      return;
+    if (isInitialized && !isValid) {
+      router.push("/login?redirect=/dashboard");
     }
+  }, [isInitialized, isValid, router]);
 
-    getUserBookings(record.id)
-      .then(setBookings)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [isValid, record?.id]);
+  useEffect(() => {
+    if (!isInitialized || !isValid || !record?.id) return;
+
+    let cancelled = false;
+
+    Promise.all([
+      getUserBookings(),
+      getServices({ requestKey: null }),
+      getTimeSlotsBasic(),
+    ])
+      .then(([bookingsList, servicesList, slotsList]) => {
+        if (cancelled) return;
+        setBookings(bookingsList);
+        setServices(new Map(servicesList.map((s) => [s.id, s])));
+        setTimeSlots(new Map(slotsList.map((s) => [s.id, s])));
+      })
+      .catch((err) => { if (!cancelled) console.error("Dashboard fetch error:", err?.url, err); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [isInitialized, isValid, record?.id]);
+
+  if (!isInitialized || (isInitialized && !isValid)) {
+    return (
+      <div className="py-20 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -56,19 +84,19 @@ export default function DashboardPage() {
       ) : bookings.length > 0 ? (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
           {bookings.map((booking) => {
-            const service = booking.expand?.service as Service | undefined;
-            const timeSlot = booking.expand?.time_slot as TimeSlot | undefined;
+            const service = services.get(booking.service);
+            const slot = timeSlots.get(booking.time_slot);
 
             return (
               <BookingCard
                 key={booking.id}
                 id={booking.id}
                 serviceName={service?.name ?? "—"}
-                date={timeSlot?.date ? formatDate(timeSlot.date) : "—"}
+                date={slot?.date ? formatDate(slot.date) : "—"}
                 time={
-                  timeSlot?.time && service?.duration_minutes
-                    ? formatTime(timeSlot.time, service.duration_minutes)
-                    : timeSlot?.time ?? "—"
+                  slot?.time && service?.duration_minutes
+                    ? formatTime(slot.time, service.duration_minutes)
+                    : slot?.time ?? "—"
                 }
                 status={booking.status as BookingStatus}
                 price={service?.price ?? 0}

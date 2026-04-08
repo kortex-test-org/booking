@@ -8,8 +8,8 @@ export interface Service extends RecordModel {
   duration_minutes: number;
 }
 
-export async function getServices(): Promise<Service[]> {
-  return pb.collection("services").getFullList<Service>({ sort: "name" });
+export async function getServices(options?: { requestKey?: string | null }): Promise<Service[]> {
+  return pb.collection("services").getFullList<Service>({ sort: "name", ...options });
 }
 
 export async function createService(data: Omit<Service, keyof import("pocketbase").RecordModel>): Promise<Service> {
