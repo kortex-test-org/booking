@@ -9,7 +9,6 @@ const MOCK_BOOKINGS = [
     time: "15:00 - 17:00",
     status: "paid" as BookingStatus,
     price: 250,
-    location: "Moscow City, офис 42",
   },
   {
     id: "B-29002",
@@ -18,16 +17,14 @@ const MOCK_BOOKINGS = [
     time: "10:00 - 11:00",
     status: "pending" as BookingStatus,
     price: 30,
-    location: "Zoom",
   },
   {
     id: "B-28501",
     serviceName: "Экспресс Аудит",
     date: "2 апреля 2026",
     time: "12:00 - 12:30",
-    status: "completed" as BookingStatus,
+    status: "paid" as BookingStatus,
     price: 15,
-    location: "Google Meet",
   },
   {
     id: "B-28400",
@@ -36,7 +33,6 @@ const MOCK_BOOKINGS = [
     time: "10:00 - 14:00",
     status: "cancelled" as BookingStatus,
     price: 300,
-    location: "Офис клиента",
   },
 ];
 

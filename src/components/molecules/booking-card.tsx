@@ -1,9 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Clock, MapPin, CreditCard, ChevronRight } from "lucide-react";
+import { CalendarDays, Clock, CreditCard } from "lucide-react";
 
-export type BookingStatus = "pending" | "paid" | "cancelled" | "completed";
+export type BookingStatus = "pending" | "paid" | "cancelled";
 
 export interface BookingCardProps {
   id: string;
@@ -12,17 +12,15 @@ export interface BookingCardProps {
   time: string;
   status: BookingStatus;
   price: number;
-  location?: string;
 }
 
 const statusConfig: Record<BookingStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "Ожидает оплаты", variant: "outline" },
   paid: { label: "Оплачено", variant: "default" },
   cancelled: { label: "Отменено", variant: "destructive" },
-  completed: { label: "Завершено", variant: "secondary" },
 };
 
-export function BookingCard({ id, serviceName, date, time, status, price, location = "Онлайн" }: BookingCardProps) {
+export function BookingCard({ id, serviceName, date, time, status, price }: BookingCardProps) {
   const config = statusConfig[status];
 
   return (
@@ -48,24 +46,13 @@ export function BookingCard({ id, serviceName, date, time, status, price, locati
             <Clock className="w-4 h-4 text-primary/70" />
             <span className="font-medium text-foreground">{time}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="w-4 h-4 text-primary/70" />
-            <span>{location}</span>
-          </div>
+
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CreditCard className="w-4 h-4 text-primary/70" />
             <span>{price} €</span>
           </div>
         </div>
       </CardContent>
-      <CardFooter className="pt-2 pb-4 mt-auto border-t-0 bg-transparent">
-        <div className="w-full flex justify-end">
-          <Button variant="ghost" size="sm" className="text-primary group-hover:underline">
-            Подробности
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        </div>
-      </CardFooter>
     </Card>
   );
 }

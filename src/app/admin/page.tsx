@@ -1,7 +1,15 @@
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+"use client";
+
+import { useState } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { ru } from "date-fns/locale";
 
 const ADMIN_MOCK_BOOKINGS = [
   {
@@ -28,7 +36,7 @@ const ADMIN_MOCK_BOOKINGS = [
     service: "Экспресс Аудит",
     date: "2 апр 2026",
     time: "12:00",
-    status: "completed",
+    status: "paid",
     price: "15 €",
   },
   {
@@ -42,15 +50,33 @@ const ADMIN_MOCK_BOOKINGS = [
   },
 ];
 
+const ADMIN_MOCK_SLOTS = [
+  { id: "S-1", date: "18 апр 2026", time: "10:00", booked: true },
+  { id: "S-2", date: "18 апр 2026", time: "11:00", booked: false },
+  { id: "S-3", date: "18 апр 2026", time: "12:00", booked: true },
+  { id: "S-4", date: "19 апр 2026", time: "09:00", booked: false },
+  { id: "S-5", date: "19 апр 2026", time: "10:00", booked: false },
+  { id: "S-6", date: "20 апр 2026", time: "15:00", booked: true },
+  { id: "S-7", date: "20 апр 2026", time: "16:00", booked: false },
+];
+
+const TIME_OPTIONS = [
+  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
+  "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
+  "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+  "17:00", "17:30", "18:00",
+];
+
 export default function AdminDashboardPage() {
+  // UI-only state for the "Add slot" dialog form
+  const [newDate, setNewDate] = useState<Date | undefined>(undefined);
+  const [newTime, setNewTime] = useState<string>("");
+
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Управление бронированиями</h1>
-          <p className="text-muted-foreground">Обзор всех записей и их статусов.</p>
-        </div>
-        <Button>Добавить бронь</Button>
+      <div className="mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Управление бронированиями</h1>
+        <p className="text-muted-foreground">Обзор всех записей и их статусов.</p>
       </div>
 
       <div className="rounded-md border overflow-hidden">
@@ -73,51 +99,129 @@ export default function AdminDashboardPage() {
                 <TableCell className="font-medium">{booking.customer}</TableCell>
                 <TableCell className="hidden md:table-cell text-muted-foreground">{booking.service}</TableCell>
                 <TableCell className="hidden sm:table-cell">
-                  {booking.date}<br/>
+                  {booking.date}<br />
                   <span className="text-xs text-muted-foreground">{booking.time}</span>
                 </TableCell>
                 <TableCell>
-                  <Badge 
+                  <Badge
                     variant={
                       booking.status === "paid" ? "default" :
-                      booking.status === "completed" ? "secondary" :
-                      booking.status === "cancelled" ? "destructive" : "outline"
+                        booking.status === "cancelled" ? "destructive" : "outline"
                     }
                     className={booking.status === "paid" ? "bg-green-500 hover:bg-green-600" : ""}
                   >
                     {booking.status === "paid" ? "Оплачено" :
-                     booking.status === "completed" ? "Завершено" :
-                     booking.status === "cancelled" ? "Отменено" : "Ожидает"}
+                      booking.status === "cancelled" ? "Отменено" : "Ожидает"}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right font-medium">{booking.price}</TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger render={
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    } />
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel>Действия</DropdownMenuLabel>
+                      </DropdownMenuGroup>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="cursor-pointer">Одобрить (paid)</DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer text-destructive">Отменить бронь</DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer text-destructive font-semibold">Удалить</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-      
+
       <div className="mt-12">
-        <h2 className="text-xl font-bold tracking-tight mb-4 border-b pb-2">Управление доступностью (Слоты)</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-           {/* Mock interface for slot management */}
-           <div className="border rounded-lg p-4 bg-muted/10">
-             <div className="flex justify-between items-center mb-2">
-               <span className="font-medium">18 апр 2026</span>
-               <Badge>3 слота</Badge>
-             </div>
-             <p className="text-sm text-muted-foreground mb-4">Настроено времени: 10:00, 11:00, 12:00</p>
-             <Button variant="outline" size="sm" className="w-full">Редактировать день</Button>
-           </div>
-           
-           <div className="border border-dashed rounded-lg p-4 bg-muted/5 flex flex-col items-center justify-center text-center min-h-[140px] hover:bg-muted/10 transition-colors cursor-pointer">
-             <span className="text-muted-foreground font-medium">+ Добавить доступный день</span>
-           </div>
+        <div className="flex items-center justify-between border-b pb-2 mb-4">
+          <h2 className="text-xl font-bold tracking-tight">Управление доступностью (Слоты)</h2>
+          <Dialog>
+            <DialogTrigger render={
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Добавить слот
+              </Button>
+            } />
+            <DialogContent className="sm:max-w-fit">
+              <DialogHeader>
+                <DialogTitle>Новый слот</DialogTitle>
+                <DialogDescription>Выберите дату и время для нового слота</DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col items-center gap-4 py-2">
+                <Calendar
+                  mode="single"
+                  locale={ru}
+                  selected={newDate}
+                  onSelect={setNewDate}
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                />
+                <div className="w-full px-1">
+                  <Select value={newTime} onValueChange={setNewTime}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Выберите время" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIME_OPTIONS.map((t) => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                {/* TODO: интеграция с бэком */}
+                <Button type="button" disabled={!newDate || !newTime}>Создать</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="rounded-md border overflow-hidden">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead>Дата</TableHead>
+                <TableHead>Время</TableHead>
+                <TableHead>Статус</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ADMIN_MOCK_SLOTS.map((slot) => (
+                <TableRow key={slot.id}>
+                  <TableCell className="font-medium">{slot.date}</TableCell>
+                  <TableCell>{slot.time}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={slot.booked ? "destructive" : "outline"}
+                      className={!slot.booked ? "text-green-600 border-green-400" : ""}
+                    >
+                      {slot.booked ? "Занят" : "Свободен"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {/* TODO: интеграция с бэком */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      disabled={slot.booked}
+                      title={slot.booked ? "Нельзя удалить занятый слот" : "Удалить слот"}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

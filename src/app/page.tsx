@@ -5,35 +5,31 @@ import { Button } from "@/components/ui/button";
 const MOCK_SERVICES = [
   {
     id: "srv_1",
-    title: "Консультация (Онлайн)",
+    name: "Консультация (Онлайн)",
     description: "Индивидуальная онлайн-консультация по вашему запросу. Подробный разбор ситуации и план действий.",
     price: 30,
-    duration: 60,
-    category: "Консультации",
+    duration_minutes: 60,
   },
   {
     id: "srv_2",
-    title: "Офлайн встреча",
+    name: "Офлайн встреча",
     description: "Личная встреча в нашем комфортном офисе. Полное погружение в проект и детальное обсуждение.",
     price: 100,
-    duration: 120,
-    category: "Встречи",
+    duration_minutes: 120,
   },
   {
     id: "srv_3",
-    title: "Экспресс Аудит",
+    name: "Экспресс Аудит",
     description: "Быстрый разрез и анализ текущей ситуации. Подходит для срочных вопросов.",
     price: 15,
-    duration: 30,
-    category: "Аналитика",
+    duration_minutes: 30,
   },
   {
     id: "srv_4",
-    title: "Разработка стратегии",
+    name: "Разработка стратегии",
     description: "Создание пошаговой стратегии развития вашего продукта с нуля до запуска.",
     price: 250,
-    duration: 240,
-    category: "Стратегия",
+    duration_minutes: 240,
   },
 ];
 
