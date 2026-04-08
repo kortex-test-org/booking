@@ -8,12 +8,14 @@ interface AuthState {
   record: AuthRecord | null;
   isValid: boolean;
   isSuperuser: boolean;
+  isInitialized: boolean;
 }
 
 const AuthContext = createContext<AuthState>({
   record: null,
   isValid: false,
   isSuperuser: false,
+  isInitialized: false,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -21,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     record: null,
     isValid: false,
     isSuperuser: false,
+    isInitialized: false,
   });
 
   useEffect(() => {
@@ -29,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       record: pb.authStore.record,
       isValid: pb.authStore.isValid,
       isSuperuser: pb.authStore.isSuperuser,
+      isInitialized: true,
     });
 
     const unsubscribe = pb.authStore.onChange(() => {
@@ -36,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         record: pb.authStore.record,
         isValid: pb.authStore.isValid,
         isSuperuser: pb.authStore.isSuperuser,
+        isInitialized: true,
       });
     });
     return unsubscribe;

@@ -1,17 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { TimeSlotPicker } from "@/components/organisms/time-slot-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Clock, ArrowRight } from "lucide-react";
+import { CalendarDays, Clock, ArrowRight, Loader2, Hourglass } from "lucide-react";
+import { useServices } from "@/queries/services";
+import { useAuth } from "@/lib/auth-context";
 
 export default function BookingServicePage() {
   const params = useParams();
   const router = useRouter();
   const [selectedDateTime, setSelectedDateTime] = useState<{ date: Date; time: string } | null>(null);
+
+  const { data: services = [], isLoading: isServicesLoading } = useServices();
+  const service = services.find((s) => s.id === params.serviceId);
+  const { isValid, isInitialized } = useAuth();
+
+  useEffect(() => {
+    if (isInitialized && !isValid) {
+      const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+    }
+  }, [isInitialized, isValid, router]);
 
   const handleTimeSelect = (date: Date, time: string) => {
     setSelectedDateTime({ date, time });
@@ -25,19 +38,39 @@ export default function BookingServicePage() {
     }
   };
 
+  if (!isInitialized || (isInitialized && !isValid) || isServicesLoading) {
+    return (
+      <div className="container mx-auto px-4 md:px-8 py-24 flex justify-center items-center min-h-[50vh]">
+        <Loader2 className="w-10 h-10 animate-spin text-primary/50" />
+      </div>
+    );
+  }
+
+  if (!service) {
+    return (
+      <div className="container mx-auto px-4 md:px-8 py-24 text-center min-h-[50vh]">
+        <h1 className="text-3xl font-bold tracking-tight mb-4">Услуга не найдена</h1>
+        <p className="text-muted-foreground mb-8">Возможно, ссылка устарела или услуга была удалена.</p>
+        <Button onClick={() => router.push("/")} size="lg">На главную</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 max-w-5xl">
       <div className="mb-8">
-        <Badge variant="secondary" className="mb-4">Услуга #{params.serviceId}</Badge>
-        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Выберите время</h1>
-        <p className="text-muted-foreground text-lg">
-          Укажите удобную для вас дату и время для бронирования услуги.
-        </p>
+        <Badge variant="secondary" className="mb-4">Бронирование</Badge>
+        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">{service.name}</h1>
+        {service.description && (
+          <p className="text-muted-foreground text-lg max-w-3xl">
+            {service.description}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <TimeSlotPicker onSelectTime={handleTimeSelect} />
+          <TimeSlotPicker serviceId={params.serviceId as string} onSelectTime={handleTimeSelect} />
         </div>
 
         <div className="lg:col-span-1">
@@ -59,12 +92,23 @@ export default function BookingServicePage() {
                     </p>
                   </div>
                 </div>
+                
                 <div className="flex items-start gap-3">
                   <Clock className="w-5 h-5 text-primary mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-sm text-muted-foreground">Время</h4>
+                    <h4 className="font-medium text-sm text-muted-foreground">Время начала</h4>
                     <p className="font-medium text-foreground">
                       {selectedDateTime ? selectedDateTime.time : "Не выбрано"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Hourglass className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Длительность</h4>
+                    <p className="font-medium text-foreground">
+                      {service.duration_minutes} мин
                     </p>
                   </div>
                 </div>
@@ -73,7 +117,7 @@ export default function BookingServicePage() {
               <div className="border-t pt-4 mt-6">
                 <div className="flex justify-between items-center mb-6">
                   <span className="font-medium">Итого к оплате</span>
-                  <span className="text-2xl font-bold">30 €</span>
+                  <span className="text-2xl font-bold">{service.price} €</span>
                 </div>
                 <Button 
                   className="w-full text-base h-12 shadow-sm rounded-xl group" 
