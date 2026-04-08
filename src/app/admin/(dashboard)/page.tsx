@@ -111,7 +111,7 @@ export default function AdminDashboardPage() {
                 <label className="text-sm font-medium">Клиент</label>
                 <Select
                   value={bookingForm.userId}
-                  onValueChange={(v) => setBookingForm((f) => ({ ...f, userId: v }))}
+                  onValueChange={(v) => setBookingForm((f) => ({ ...f, userId: v ?? "" }))}
                   itemToStringLabel={(v) => { const u = users.find((x) => x.id === v); return u?.name || u?.email || v; }}
                 >
                   <SelectTrigger className="w-full">
@@ -131,7 +131,7 @@ export default function AdminDashboardPage() {
                 <label className="text-sm font-medium">Услуга</label>
                 <Select
                   value={bookingForm.serviceId}
-                  onValueChange={(v) => setBookingForm((f) => ({ ...f, serviceId: v, slotId: "" }))}
+                  onValueChange={(v) => setBookingForm((f) => ({ ...f, serviceId: v ?? "", slotId: "" }))}
                   itemToStringLabel={(v) => services.find((s) => s.id === v)?.name ?? v}
                 >
                   <SelectTrigger className="w-full">
@@ -149,7 +149,7 @@ export default function AdminDashboardPage() {
                 <label className="text-sm font-medium">Слот</label>
                 <Select
                   value={bookingForm.slotId}
-                  onValueChange={(v) => setBookingForm((f) => ({ ...f, slotId: v }))}
+                  onValueChange={(v) => setBookingForm((f) => ({ ...f, slotId: v ?? "" }))}
                   disabled={!bookingForm.serviceId}
                   itemToStringLabel={(v) => { const s = availableSlotsForForm.find((x) => x.id === v); return s ? `${s.date} · ${s.time}` : v; }}
                 >

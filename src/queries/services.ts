@@ -5,7 +5,7 @@ import type { Service } from "@/services/services";
 export const servicesKey = ["services"] as const;
 
 export function useServices() {
-  return useQuery({ queryKey: servicesKey, queryFn: getServices, retry: 1 });
+  return useQuery<Service[]>({ queryKey: servicesKey, queryFn: () => getServices(), retry: 1 });
 }
 
 export function useCreateService() {
