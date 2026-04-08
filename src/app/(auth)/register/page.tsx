@@ -1,9 +1,49 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/templates/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ClientResponseError } from "pocketbase";
+import { registerUser, loginUser } from "@/services/auth";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await registerUser({ name, email, password });
+      await loginUser(email, password);
+      router.push("/dashboard");
+    } catch (err) {
+      if (err instanceof ClientResponseError) {
+        const emailErr = err.response?.data?.email?.code;
+        const passErr = err.response?.data?.password?.code;
+        if (emailErr === "validation_not_unique") {
+          setError("Этот email уже зарегистрирован. Войдите или используйте другой адрес.");
+        } else if (passErr === "validation_length_out_of_range") {
+          setError("Пароль слишком короткий. Минимум 8 символов.");
+        } else {
+          setError(err.message || "Не удалось зарегистрироваться.");
+        }
+      } else {
+        setError("Не удалось зарегистрироваться. Проверьте данные и попробуйте снова.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <AuthLayout
       title="Создать аккаунт"
@@ -12,11 +52,17 @@ export default function RegisterPage() {
       linkHref="/login"
     >
       <div className="grid gap-6">
-        <form>
+        <form onSubmit={handleSubmit}>
           <div className="grid gap-4">
             <div className="grid gap-2 text-left">
               <Label htmlFor="name">Имя</Label>
-              <Input id="name" placeholder="Иван Иванов" required />
+              <Input
+                id="name"
+                placeholder="Иван Иванов"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
             <div className="grid gap-2 text-left">
               <Label htmlFor="email">Email</Label>
@@ -28,28 +74,26 @@ export default function RegisterPage() {
                 autoComplete="email"
                 autoCorrect="off"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="grid gap-2 text-left">
               <Label htmlFor="password">Пароль</Label>
-              <Input id="password" type="password" required />
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-            <Button className="mt-2 w-full">Зарегистрироваться</Button>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Button type="submit" className="mt-2 w-full" disabled={loading}>
+              {loading ? "Регистрация..." : "Зарегистрироваться"}
+            </Button>
           </div>
         </form>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Или зарегистрироваться с
-            </span>
-          </div>
-        </div>
-        <Button variant="outline" type="button" className="w-full">
-          Google
-        </Button>
       </div>
     </AuthLayout>
   );

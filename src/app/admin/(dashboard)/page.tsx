@@ -1,0 +1,285 @@
+"use client";
+
+import { useState } from "react";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { useTimeSlots, useCreateTimeSlot, useDeleteTimeSlot } from "@/queries/time-slots";
+import { useServices } from "@/queries/services";
+import { useBookings, useUpdateBookingStatus, useDeleteBooking } from "@/queries/bookings";
+
+const TIME_OPTIONS = [
+  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
+  "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
+  "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+  "17:00", "17:30", "18:00",
+];
+
+const STATUS_LABEL: Record<string, string> = {
+  paid: "Оплачено",
+  pending: "Ожидает",
+  cancelled: "Отменено",
+};
+
+export default function AdminDashboardPage() {
+  const [open, setOpen] = useState(false);
+  const [newDate, setNewDate] = useState<Date | undefined>(undefined);
+  const [newTime, setNewTime] = useState<string | null>(null);
+  const [newServiceId, setNewServiceId] = useState<string | null>(null);
+
+  const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
+  const { data: slots = [], isLoading: slotsLoading } = useTimeSlots();
+  const { data: services = [] } = useServices();
+  const createSlot = useCreateTimeSlot();
+  const deleteSlot = useDeleteTimeSlot();
+  const updateStatus = useUpdateBookingStatus();
+  const deleteBooking = useDeleteBooking();
+
+  function handleCreate() {
+    if (!newDate || !newTime || !newServiceId) return;
+    createSlot.mutate(
+      { service: newServiceId, date: format(newDate, "yyyy-MM-dd"), time: newTime },
+      {
+        onSuccess: () => {
+          setOpen(false);
+          setNewDate(undefined);
+          setNewTime(null);
+          setNewServiceId(null);
+        },
+      }
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Управление бронированиями</h1>
+        <p className="text-muted-foreground">Обзор всех записей и их статусов.</p>
+      </div>
+
+      <div className="rounded-md border overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow>
+              <TableHead>Клиент</TableHead>
+              <TableHead className="hidden md:table-cell">Услуга</TableHead>
+              <TableHead className="hidden sm:table-cell">Дата / Время</TableHead>
+              <TableHead>Статус</TableHead>
+              <TableHead className="w-12.5"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {bookingsLoading && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  Загрузка...
+                </TableCell>
+              </TableRow>
+            )}
+            {!bookingsLoading && bookings.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  Бронирований нет
+                </TableCell>
+              </TableRow>
+            )}
+            {bookings.map((booking) => {
+              const service = booking.expand?.service;
+              const slot = booking.expand?.time_slot;
+              const user = booking.expand?.user;
+              return (
+                <TableRow key={booking.id}>
+                  <TableCell className="font-medium">
+                    {user?.name ?? user?.email ?? booking.user}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-muted-foreground">
+                    {service?.name ?? "—"}
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    {slot?.date ?? "—"}
+                    <br />
+                    <span className="text-xs text-muted-foreground">{slot?.time ?? ""}</span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        booking.status === "paid" ? "default" :
+                        booking.status === "cancelled" ? "destructive" : "outline"
+                      }
+                      className={booking.status === "paid" ? "bg-green-500 hover:bg-green-600" : ""}
+                    >
+                      {STATUS_LABEL[booking.status] ?? booking.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      } />
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>Действия</DropdownMenuLabel>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onSelect={() => updateStatus.mutate({ id: booking.id, status: "paid" })}
+                        >
+                          Одобрить (paid)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer text-destructive"
+                          onSelect={() => updateStatus.mutate({ id: booking.id, status: "cancelled" })}
+                        >
+                          Отменить бронь
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer text-destructive font-semibold"
+                          onSelect={() => deleteBooking.mutate(booking.id)}
+                        >
+                          Удалить
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="mt-12">
+        <div className="flex items-center justify-between border-b pb-2 mb-4">
+          <h2 className="text-xl font-bold tracking-tight">Управление доступностью (Слоты)</h2>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger render={
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Добавить слот
+              </Button>
+            } />
+            <DialogContent className="sm:max-w-fit">
+              <DialogHeader>
+                <DialogTitle>Новый слот</DialogTitle>
+                <DialogDescription>Выберите услугу, дату и время для нового слота</DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col items-center gap-4 py-2">
+                <div className="w-full px-1">
+                  <Select value={newServiceId ?? ""} onValueChange={setNewServiceId}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Выберите услугу" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {services.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Calendar
+                  mode="single"
+                  locale={ru}
+                  selected={newDate}
+                  onSelect={setNewDate}
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                />
+                <div className="w-full px-1">
+                  <Select value={newTime ?? ""} onValueChange={setNewTime}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Выберите время" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIME_OPTIONS.map((t) => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  disabled={!newDate || !newTime || !newServiceId || createSlot.isPending}
+                  onClick={handleCreate}
+                >
+                  {createSlot.isPending ? "Создание..." : "Создать"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="rounded-md border overflow-hidden">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead>Дата</TableHead>
+                <TableHead>Время</TableHead>
+                <TableHead>Услуга</TableHead>
+                <TableHead>Статус</TableHead>
+                <TableHead className="w-12.5"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {slotsLoading && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    Загрузка...
+                  </TableCell>
+                </TableRow>
+              )}
+              {!slotsLoading && slots.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    Слоты не найдены
+                  </TableCell>
+                </TableRow>
+              )}
+              {slots.map((slot) => {
+                const isBooked = !slot.is_available;
+                const serviceName = slot.expand?.service?.name ?? "—";
+                return (
+                  <TableRow key={slot.id}>
+                    <TableCell className="font-medium">{slot.date}</TableCell>
+                    <TableCell>{slot.time}</TableCell>
+                    <TableCell className="text-muted-foreground">{serviceName}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={isBooked ? "destructive" : "outline"}
+                        className={!isBooked ? "text-green-600 border-green-400" : ""}
+                      >
+                        {isBooked ? "Занят" : "Свободен"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        disabled={isBooked || deleteSlot.isPending}
+                        title={isBooked ? "Нельзя удалить занятый слот" : "Удалить слот"}
+                        onClick={() => deleteSlot.mutate(slot.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  );
+}
