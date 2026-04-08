@@ -1,39 +1,17 @@
 import { MainLayout } from "@/components/templates/main-layout";
 import { ServiceCard } from "@/components/molecules/service-card";
 import { Button } from "@/components/ui/button";
+import { getServices } from "@/services/services";
 
-const MOCK_SERVICES = [
-  {
-    id: "srv_1",
-    name: "Консультация (Онлайн)",
-    description: "Индивидуальная онлайн-консультация по вашему запросу. Подробный разбор ситуации и план действий.",
-    price: 30,
-    duration_minutes: 60,
-  },
-  {
-    id: "srv_2",
-    name: "Офлайн встреча",
-    description: "Личная встреча в нашем комфортном офисе. Полное погружение в проект и детальное обсуждение.",
-    price: 100,
-    duration_minutes: 120,
-  },
-  {
-    id: "srv_3",
-    name: "Экспресс Аудит",
-    description: "Быстрый разрез и анализ текущей ситуации. Подходит для срочных вопросов.",
-    price: 15,
-    duration_minutes: 30,
-  },
-  {
-    id: "srv_4",
-    name: "Разработка стратегии",
-    description: "Создание пошаговой стратегии развития вашего продукта с нуля до запуска.",
-    price: 250,
-    duration_minutes: 240,
-  },
-];
+export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home() {
+  let services: any[] = [];
+  try {
+    services = await getServices();
+  } catch (error) {
+    console.error("Failed to fetch services:", error);
+  }
   return (
     <MainLayout>
       <section className="relative overflow-hidden w-full pt-16 md:pt-32 pb-16 md:pb-24">
@@ -70,9 +48,22 @@ export default function Home() {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-          {MOCK_SERVICES.map((service) => (
-            <ServiceCard key={service.id} {...service} />
-          ))}
+          {services.length > 0 ? (
+            services.map((service) => (
+              <ServiceCard 
+                key={service.id} 
+                id={service.id}
+                name={service.name}
+                description={service.description}
+                price={service.price}
+                duration_minutes={service.duration_minutes}
+              />
+            ))
+          ) : (
+            <p className="text-muted-foreground col-span-full text-center py-8">
+              Услуги пока не добавлены.
+            </p>
+          )}
         </div>
       </section>
     </MainLayout>
