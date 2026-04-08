@@ -18,7 +18,10 @@ export function useUpdateBookingStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: Booking["status"] }) =>
       updateBookingStatus(id, status),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: bookingsKey }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bookingsKey });
+      queryClient.invalidateQueries({ queryKey: ["time_slots"] });
+    },
   });
 }
 
@@ -26,7 +29,10 @@ export function useDeleteBooking() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteBooking,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: bookingsKey }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bookingsKey });
+      queryClient.invalidateQueries({ queryKey: ["time_slots"] });
+    },
   });
 }
 

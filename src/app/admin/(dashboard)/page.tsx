@@ -87,7 +87,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-start justify-between">
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Управление бронированиями</h1>
           <p className="text-muted-foreground">Обзор всех записей и их статусов.</p>
@@ -230,6 +230,9 @@ export default function AdminDashboardPage() {
               const service = booking.expand?.service;
               const slot = booking.expand?.time_slot;
               const user = booking.expand?.user;
+              const slotTaken = bookings.some(
+                (b) => b.id !== booking.id && b.time_slot === booking.time_slot && b.status !== "cancelled"
+              );
               return (
                 <TableRow key={booking.id}>
                   <TableCell className="font-medium">
@@ -269,9 +272,13 @@ export default function AdminDashboardPage() {
                         {booking.status !== "paid" && (
                           <DropdownMenuItem
                             className="cursor-pointer"
+                            disabled={booking.status === "cancelled" && slotTaken}
                             onClick={() => updateStatus.mutate({ id: booking.id, status: "paid" })}
                           >
                             Одобрить (paid)
+                            {booking.status === "cancelled" && slotTaken && (
+                              <span className="ml-auto text-xs text-muted-foreground">слот занят</span>
+                            )}
                           </DropdownMenuItem>
                         )}
                         {booking.status !== "cancelled" && (
@@ -299,7 +306,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="mt-12">
-        <div className="flex items-center justify-between border-b pb-2 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-2 mb-4 gap-3">
           <h2 className="text-xl font-bold tracking-tight">Управление доступностью (Слоты)</h2>
           <Dialog open={slotOpen} onOpenChange={setSlotOpen}>
             <DialogTrigger render={
@@ -331,6 +338,7 @@ export default function AdminDashboardPage() {
                   locale={ru}
                   selected={newDate}
                   onSelect={setNewDate}
+                  className="[--cell-size:min(2.8rem,calc((100vw-5rem)/7))]"
                   disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                 />
                 <div className="w-full px-1">

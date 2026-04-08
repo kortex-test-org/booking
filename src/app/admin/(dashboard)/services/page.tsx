@@ -76,7 +76,7 @@ export default function AdminServicesPage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-start justify-between">
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Услуги</h1>
           <p className="text-muted-foreground">Управление списком услуг.</p>
@@ -216,7 +216,7 @@ function ServiceForm({
           placeholder="Краткое описание услуги"
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="svc-price">Цена (€)</Label>
           <Input
