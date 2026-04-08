@@ -1,15 +1,31 @@
 import { MainLayout } from "@/components/templates/main-layout";
 import { ServiceCard } from "@/components/molecules/service-card";
 import { getServices } from "@/services/services";
+import { getTimeSlotsServer } from "@/services/time-slots";
+import { format } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   let services: any[] = [];
+  let availableServices: any[] = [];
   try {
     services = await getServices();
+    const slots = await getTimeSlotsServer();
+    
+    // Вычисляем доступность для каждой услуги
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    availableServices = services.map(service => {
+      const serviceSlots = slots.filter(s => s.service === service.id && s.date >= todayStr);
+      const hasAvailableSlots = serviceSlots.some(slot => {
+        const bookings = slot.expand?.bookings_via_time_slot || [];
+        // Слот доступен, если нет ни одной активной брони (статус не cancelled)
+        return !bookings.some((b: any) => b.status !== 'cancelled');
+      });
+      return { ...service, hasAvailableSlots };
+    });
   } catch (error) {
-    console.error("Failed to fetch services:", error);
+    console.error("Failed to fetch data:", error);
   }
   return (
     <MainLayout>
@@ -36,8 +52,8 @@ export default async function Home() {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-          {services.length > 0 ? (
-            services.map((service) => (
+          {availableServices.length > 0 ? (
+            availableServices.map((service) => (
               <ServiceCard 
                 key={service.id} 
                 id={service.id}
@@ -45,6 +61,7 @@ export default async function Home() {
                 description={service.description}
                 price={service.price}
                 duration_minutes={service.duration_minutes}
+                hasAvailableSlots={service.hasAvailableSlots}
               />
             ))
           ) : (

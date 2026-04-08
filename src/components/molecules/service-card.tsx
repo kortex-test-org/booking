@@ -11,9 +11,10 @@ export interface ServiceCardProps {
   description: string;
   price: number;
   duration_minutes: number;
+  hasAvailableSlots?: boolean;
 }
 
-export function ServiceCard({ id, name, description, price, duration_minutes }: ServiceCardProps) {
+export function ServiceCard({ id, name, description, price, duration_minutes, hasAvailableSlots = true }: ServiceCardProps) {
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-muted/50 dark:bg-card/50 backdrop-blur-sm flex flex-col justify-between p-0 gap-0">
       <div>
@@ -36,10 +37,16 @@ export function ServiceCard({ id, name, description, price, duration_minutes }: 
         </CardContent>
       </div>
       <CardFooter className="p-5">
-        <Link href={`/booking/${id}`} className="w-full relative overflow-hidden rounded-md">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
-          <Button className="w-full shadow-sm transition-all relative">Забронировать</Button>
-        </Link>
+        {hasAvailableSlots ? (
+          <Link href={`/booking/${id}`} className="w-full relative overflow-hidden rounded-md">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+            <Button className="w-full shadow-sm transition-all relative">Забронировать</Button>
+          </Link>
+        ) : (
+          <Button variant="secondary" disabled className="w-full">
+            Не доступно
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

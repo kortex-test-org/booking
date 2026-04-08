@@ -11,7 +11,7 @@ import { useTimeSlots } from "@/queries/time-slots";
 
 interface TimeSlotPickerProps {
   serviceId: string;
-  onSelectTime: (date: Date, time: string) => void;
+  onSelectTime: (date: Date, time: string, slotId: string) => void;
 }
 
 export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps) {
@@ -64,7 +64,11 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
   const handleTimeSelect = (time: string) => {
     setSelectedTime(time);
     if (date) {
-      onSelectTime(date, time);
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const slot = availableSlots.find((s) => s.date === dateStr && s.time === time);
+      if (slot) {
+        onSelectTime(date, time, slot.id);
+      }
     }
   };
 
@@ -123,7 +127,11 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
           <Clock className="w-5 h-5 text-primary" />
           Доступное время {date ? `на ${date.toLocaleDateString("ru-RU")}` : ""}
         </h3>
-        {date ? (
+        {availableDateStrings.size === 0 ? (
+          <div className="py-12 text-center border rounded-xl border-dashed bg-destructive/10 border-destructive/20 text-destructive">
+            <p className="font-medium">К сожалению, на ближайшее время нет свободных мест для записи.</p>
+          </div>
+        ) : date ? (
           <div className="flex flex-wrap gap-3">
             {availableTimes.length > 0 ? (
               availableTimes.map((time) => (
