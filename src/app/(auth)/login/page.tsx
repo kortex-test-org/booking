@@ -22,7 +22,16 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await loginUser(email, password);
-      router.push("/dashboard");
+      // Читаем параметр redirect из текущего URL
+      let redirectPath = "/dashboard";
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const redir = urlParams.get("redirect");
+        if (redir && redir.startsWith("/")) {
+          redirectPath = redir;
+        }
+      }
+      router.push(redirectPath);
     } catch (err) {
       if (err instanceof ClientResponseError && err.status === 400) {
         setError("Неверный email или пароль.");
