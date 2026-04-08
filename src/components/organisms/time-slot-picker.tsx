@@ -124,13 +124,13 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
           Доступное время {date ? `на ${date.toLocaleDateString("ru-RU")}` : ""}
         </h3>
         {date ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+          <div className="flex flex-wrap gap-3">
             {availableTimes.length > 0 ? (
               availableTimes.map((time) => (
                 <Button
                   key={time}
                   variant={selectedTime === time ? "default" : "outline"}
-                  className={`transition-all ${
+                  className={`min-w-[90px] h-10 px-4 transition-all ${
                     selectedTime === time 
                       ? "shadow-md scale-105" 
                       : "hover:border-primary/50 hover:bg-primary/5"

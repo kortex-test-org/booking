@@ -1,6 +1,5 @@
 import { MainLayout } from "@/components/templates/main-layout";
 import { ServiceCard } from "@/components/molecules/service-card";
-import { Button } from "@/components/ui/button";
 import { getServices } from "@/services/services";
 
 export const dynamic = "force-dynamic";
@@ -19,23 +18,12 @@ export default async function Home() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]" />
         
         <div className="container mx-auto px-4 md:px-8 text-center flex flex-col items-center">
-          <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 mb-6">
-            ✨ Версия MVP 1.0
-          </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tight lg:leading-[1.1] max-w-3xl mb-6">
             Бронируйте услуги <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">быстро и удобно</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10">
             Современная платформа для записи на наши премиум-услуги. Выберите удобное время, забронируйте слот и управляйте своими записями в одном месте.
           </p>
-          <div className="flex items-center gap-4">
-            <Button size="lg" className="rounded-full shadow-lg hover:shadow-primary/25 transition-all text-base px-8 h-12">
-              Смотреть услуги
-            </Button>
-            <Button size="lg" variant="outline" className="rounded-full text-base px-8 h-12">
-              О нас
-            </Button>
-          </div>
         </div>
       </section>
 
