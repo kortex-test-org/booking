@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { BookingCard, type BookingStatus } from "@/components/molecules/booking-card";
 import { useAuth } from "@/lib/auth-context";
-import { getUserBookings, type Booking } from "@/services/bookings";
+import { getUserBookings, updateBookingStatus, type Booking } from "@/services/bookings";
 import { getServices, type Service } from "@/services/services";
 import { getTimeSlotsBasic, type TimeSlot } from "@/services/time-slots";
 import { Loader2 } from "lucide-react";
@@ -31,6 +31,21 @@ export default function DashboardPage() {
   const [services, setServices] = useState<Map<string, Service>>(new Map());
   const [timeSlots, setTimeSlots] = useState<Map<string, TimeSlot>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  async function handleCancel(bookingId: string) {
+    setCancellingId(bookingId);
+    try {
+      await updateBookingStatus(bookingId, "cancelled");
+      setBookings((prev) =>
+        prev.map((b) => (b.id === bookingId ? { ...b, status: "cancelled" } : b))
+      );
+    } catch (err) {
+      console.error("Cancel error:", err);
+    } finally {
+      setCancellingId(null);
+    }
+  }
 
   useEffect(() => {
     if (!isInitialized || !isValid || !record?.id) return;
@@ -92,6 +107,9 @@ export default function DashboardPage() {
                 }
                 status={booking.status as BookingStatus}
                 price={service?.price ?? 0}
+                onPay={() => {}}
+                onCancel={() => handleCancel(booking.id)}
+                cancelLoading={cancellingId === booking.id}
               />
             );
           })}
