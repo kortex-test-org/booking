@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { BookingCard, type BookingStatus } from "@/components/molecules/booking-card";
 import { useAuth } from "@/lib/auth-context";
 import { getUserBookings, type Booking } from "@/services/bookings";
@@ -28,17 +27,10 @@ function formatTime(startTime: string, durationMinutes: number): string {
 
 export default function DashboardPage() {
   const { record, isValid, isInitialized } = useAuth();
-  const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [services, setServices] = useState<Map<string, Service>>(new Map());
   const [timeSlots, setTimeSlots] = useState<Map<string, TimeSlot>>(new Map());
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (isInitialized && !isValid) {
-      router.push("/login?redirect=/dashboard");
-    }
-  }, [isInitialized, isValid, router]);
 
   useEffect(() => {
     if (!isInitialized || !isValid || !record?.id) return;
@@ -56,13 +48,13 @@ export default function DashboardPage() {
         setServices(new Map(servicesList.map((s) => [s.id, s])));
         setTimeSlots(new Map(slotsList.map((s) => [s.id, s])));
       })
-      .catch((err) => { if (!cancelled) console.error("Dashboard fetch error:", err?.url, err); })
+      .catch((err) => { if (!cancelled) console.error("Dashboard fetch error:", err); })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
   }, [isInitialized, isValid, record?.id]);
 
-  if (!isInitialized || (isInitialized && !isValid)) {
+  if (!isInitialized || !isValid) {
     return (
       <div className="py-20 flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

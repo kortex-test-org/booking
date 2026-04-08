@@ -15,49 +15,43 @@ export function AuthLayout({
   linkHref: string;
 }) {
   return (
-    <div className="container relative h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-        <div className="absolute inset-0 bg-zinc-900" />
-        <div className="relative z-20 flex items-center text-lg font-medium">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-2 h-6 w-6"
-          >
-            <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
-          </svg>
-          Prime
-        </div>
-        <div className="relative z-20 mt-auto">
-          <blockquote className="space-y-2">
-            <p className="text-lg">
-              "Эта система бронирования сэкономила мне бесчисленное количество часов и позволила масштабировать бизнес быстрее, чем когда-либо."
-            </p>
-            <footer className="text-sm">Алекс Фишер, Владелец студии</footer>
-          </blockquote>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
+      {/* Декоративный фон */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-150 h-150 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-125 h-125 rounded-full bg-primary/5 blur-3xl" />
       </div>
-      <div className="lg:p-8 flex h-full items-center justify-center relative">
+
+      <div className="w-full max-w-sm">
+        {/* Логотип */}
         <Link
-          href={linkHref}
-          className="absolute right-4 top-4 md:right-8 md:top-8 text-sm font-medium hover:underline underline-offset-4"
+          href="/"
+          className="flex items-center gap-2 justify-center mb-8 hover:opacity-80 transition-opacity"
         >
-          {linkText}
+          <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-sm">
+            <span className="text-primary-foreground font-black text-lg leading-none">P</span>
+          </div>
+          <span className="font-bold text-xl tracking-tighter">Prime.</span>
         </Link>
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-          <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+
+        {/* Карточка */}
+        <div className="bg-background rounded-2xl border shadow-sm p-8">
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-bold tracking-tight mb-1">{title}</h1>
             {subtitle && (
               <p className="text-sm text-muted-foreground">{subtitle}</p>
             )}
           </div>
+
           {children}
         </div>
+
+        {/* Ссылка переключения */}
+        <p className="text-center text-sm text-muted-foreground mt-5">
+          <Link href={linkHref} className="font-medium text-foreground hover:underline underline-offset-4">
+            {linkText}
+          </Link>
+        </p>
       </div>
     </div>
   );
