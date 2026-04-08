@@ -70,7 +70,7 @@ const TIME_OPTIONS = [
 export default function AdminDashboardPage() {
   // UI-only state for the "Add slot" dialog form
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
-  const [newTime, setNewTime] = useState<string>("");
+  const [newTime, setNewTime] = useState<string | null>(null);
 
   return (
     <div>
