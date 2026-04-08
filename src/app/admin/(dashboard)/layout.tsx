@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/organisms/header";
-import { AdminSidebar } from "@/components/organisms/admin-sidebar";
+import { AdminSidebar, AdminMobileSidebarTrigger } from "@/components/organisms/admin-sidebar";
 import { useAuth } from "@/lib/auth-context";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -36,12 +36,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <AdminSidebar />
 
           <main className="flex-1 min-w-0">
-            <div className="bg-background rounded-2xl border shadow-sm p-6 md:p-8 min-h-125">
+            <div className="bg-background rounded-2xl border shadow-sm p-4 md:p-8 min-h-125">
               {children}
             </div>
           </main>
         </div>
       </div>
+
+      <AdminMobileSidebarTrigger />
     </div>
   );
 }

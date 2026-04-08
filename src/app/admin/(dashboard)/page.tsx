@@ -204,11 +204,11 @@ export default function AdminDashboardPage() {
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
-              <TableHead>Клиент</TableHead>
-              <TableHead className="hidden md:table-cell">Услуга</TableHead>
-              <TableHead className="hidden sm:table-cell">Дата / Время</TableHead>
-              <TableHead>Статус</TableHead>
-              <TableHead className="w-12.5"></TableHead>
+              <TableHead className="min-w-30">Клиент</TableHead>
+              <TableHead className="min-w-30">Услуга</TableHead>
+              <TableHead className="min-w-27.5">Дата / Время</TableHead>
+              <TableHead className="min-w-25">Статус</TableHead>
+              <TableHead className="w-10"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -235,10 +235,10 @@ export default function AdminDashboardPage() {
                   <TableCell className="font-medium">
                     {user?.name ?? user?.email ?? booking.user}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-muted-foreground">
+                  <TableCell className="text-muted-foreground">
                     {service?.name ?? "—"}
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">
+                  <TableCell>
                     {slot?.date ?? "—"}
                     <br />
                     <span className="text-xs text-muted-foreground">{slot?.time ?? ""}</span>
@@ -363,11 +363,11 @@ export default function AdminDashboardPage() {
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableHead>Дата</TableHead>
-                <TableHead>Время</TableHead>
-                <TableHead>Услуга</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead className="w-12.5"></TableHead>
+                <TableHead className="min-w-27.5">Дата</TableHead>
+                <TableHead className="min-w-20">Время</TableHead>
+                <TableHead className="min-w-30">Услуга</TableHead>
+                <TableHead className="min-w-25">Статус</TableHead>
+                <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

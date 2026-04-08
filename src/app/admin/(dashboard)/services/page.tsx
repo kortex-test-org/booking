@@ -111,11 +111,11 @@ export default function AdminServicesPage() {
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
-              <TableHead>Название</TableHead>
-              <TableHead className="hidden sm:table-cell">Описание</TableHead>
-              <TableHead>Цена</TableHead>
-              <TableHead className="hidden md:table-cell">Длит. (мин)</TableHead>
-              <TableHead className="w-12.5"></TableHead>
+              <TableHead className="min-w-30">Название</TableHead>
+              <TableHead className="min-w-40">Описание</TableHead>
+              <TableHead className="min-w-25">Цена</TableHead>
+              <TableHead className="min-w-25">Длит. (мин)</TableHead>
+              <TableHead className="w-10"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -132,11 +132,11 @@ export default function AdminServicesPage() {
             {services.map((service) => (
               <TableRow key={service.id}>
                 <TableCell className="font-medium">{service.name}</TableCell>
-                <TableCell className="hidden sm:table-cell text-muted-foreground max-w-xs truncate">
+                <TableCell className="text-muted-foreground max-w-xs truncate">
                   {service.description || "—"}
                 </TableCell>
                 <TableCell>{service.price} €</TableCell>
-                <TableCell className="hidden md:table-cell">{service.duration_minutes}</TableCell>
+                <TableCell>{service.duration_minutes}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger render={
