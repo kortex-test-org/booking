@@ -37,6 +37,13 @@ export async function getTimeSlotsServer(): Promise<TimeSlot[]> {
   }
 }
 
+export async function getTimeSlotsBasic(): Promise<TimeSlot[]> {
+  return pb.collection("time_slots").getFullList<TimeSlot>({
+    sort: "date,time",
+    requestKey: null,
+  });
+}
+
 export async function createTimeSlot(data: {
   service: string;
   date: string;

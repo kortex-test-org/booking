@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Clock, CreditCard } from "lucide-react";
+import { CalendarDays, Clock, CreditCard, ArrowRight, X } from "lucide-react";
 
 export type BookingStatus = "pending" | "paid" | "cancelled";
 
@@ -12,6 +12,9 @@ export interface BookingCardProps {
   time: string;
   status: BookingStatus;
   price: number;
+  onPay?: () => void;
+  onCancel?: () => void;
+  cancelLoading?: boolean;
 }
 
 const statusConfig: Record<BookingStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -20,7 +23,7 @@ const statusConfig: Record<BookingStatus, { label: string; variant: "default" | 
   cancelled: { label: "Отменено", variant: "destructive" },
 };
 
-export function BookingCard({ id, serviceName, date, time, status, price }: BookingCardProps) {
+export function BookingCard({ id, serviceName, date, time, status, price, onPay, onCancel, cancelLoading }: BookingCardProps) {
   const config = statusConfig[status];
 
   return (
@@ -46,13 +49,29 @@ export function BookingCard({ id, serviceName, date, time, status, price }: Book
             <Clock className="w-4 h-4 text-primary/70" />
             <span className="font-medium text-foreground">{time}</span>
           </div>
-
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CreditCard className="w-4 h-4 text-primary/70" />
             <span>{price} €</span>
           </div>
         </div>
       </CardContent>
+      {status === "pending" && (
+        <CardFooter className="py-4 px-6 flex gap-2">
+          <Button className="flex-1 group/btn" onClick={onPay}>
+            Перейти к оплате
+            <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover/btn:translate-x-1" />
+          </Button>
+          <Button
+            variant="outline"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+            onClick={onCancel}
+            disabled={cancelLoading}
+          >
+            <X className="w-4 h-4" />
+            Отменить
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

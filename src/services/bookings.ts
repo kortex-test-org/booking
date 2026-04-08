@@ -24,6 +24,12 @@ export async function getBookings(): Promise<Booking[]> {
   });
 }
 
+export async function getUserBookings(): Promise<Booking[]> {
+  return pb.collection("bookings").getFullList<Booking>({
+    requestKey: null,
+  });
+}
+
 export async function updateBookingStatus(
   id: string,
   status: Booking["status"]
