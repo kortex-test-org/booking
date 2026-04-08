@@ -1,65 +1,80 @@
-import Image from "next/image";
+import { MainLayout } from "@/components/templates/main-layout";
+import { ServiceCard } from "@/components/molecules/service-card";
+import { Button } from "@/components/ui/button";
+
+const MOCK_SERVICES = [
+  {
+    id: "srv_1",
+    name: "Консультация (Онлайн)",
+    description: "Индивидуальная онлайн-консультация по вашему запросу. Подробный разбор ситуации и план действий.",
+    price: 30,
+    duration_minutes: 60,
+  },
+  {
+    id: "srv_2",
+    name: "Офлайн встреча",
+    description: "Личная встреча в нашем комфортном офисе. Полное погружение в проект и детальное обсуждение.",
+    price: 100,
+    duration_minutes: 120,
+  },
+  {
+    id: "srv_3",
+    name: "Экспресс Аудит",
+    description: "Быстрый разрез и анализ текущей ситуации. Подходит для срочных вопросов.",
+    price: 15,
+    duration_minutes: 30,
+  },
+  {
+    id: "srv_4",
+    name: "Разработка стратегии",
+    description: "Создание пошаговой стратегии развития вашего продукта с нуля до запуска.",
+    price: 250,
+    duration_minutes: 240,
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <MainLayout>
+      <section className="relative overflow-hidden w-full pt-16 md:pt-32 pb-16 md:pb-24">
+        {/* Abstract Background */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]" />
+        
+        <div className="container mx-auto px-4 md:px-8 text-center flex flex-col items-center">
+          <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 mb-6">
+            ✨ Версия MVP 1.0
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight lg:leading-[1.1] max-w-3xl mb-6">
+            Бронируйте услуги <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">быстро и удобно</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10">
+            Современная платформа для записи на наши премиум-услуги. Выберите удобное время, забронируйте слот и управляйте своими записями в одном месте.
+          </p>
+          <div className="flex items-center gap-4">
+            <Button size="lg" className="rounded-full shadow-lg hover:shadow-primary/25 transition-all text-base px-8 h-12">
+              Смотреть услуги
+            </Button>
+            <Button size="lg" variant="outline" className="rounded-full text-base px-8 h-12">
+              О нас
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 md:px-8 py-16 md:py-24" id="services">
+        <div className="mb-12 md:mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Наши услуги</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl">
+            Выберите подходящую услугу из списка ниже. Мы предлагаем различные форматы работы для решения ваших задач.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+          {MOCK_SERVICES.map((service) => (
+            <ServiceCard key={service.id} {...service} />
+          ))}
         </div>
-      </main>
-    </div>
+      </section>
+    </MainLayout>
   );
 }
