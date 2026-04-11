@@ -8,6 +8,8 @@ if (typeof window !== "undefined") {
     document.cookie = pb.authStore.exportToCookie({
       httpOnly: false,
       path: "/",
+      secure: window.location.protocol === "https:",
+      sameSite: "Lax",
     });
   }, true);
 }
