@@ -1,6 +1,7 @@
 import type { RecordModel } from "pocketbase";
 import type { BookingStatus } from "@/lib/constants";
 import { pb } from "./pb";
+import type { TimeSlot } from "./time-slots";
 
 export type { BookingStatus };
 
@@ -10,6 +11,12 @@ export interface Booking extends RecordModel {
   time_slot: string;
   status: BookingStatus;
   stripe_payment_id?: string;
+}
+
+export interface BookingWithExpand extends Booking {
+  expand?: {
+    time_slot?: TimeSlot;
+  };
 }
 
 export async function createBooking(data: {
@@ -27,9 +34,10 @@ export async function getBookings(): Promise<Booking[]> {
   });
 }
 
-export async function getUserBookings(): Promise<Booking[]> {
-  return pb.collection("bookings").getFullList<Booking>({
+export async function getUserBookings(): Promise<BookingWithExpand[]> {
+  return pb.collection("bookings").getFullList<BookingWithExpand>({
     requestKey: null,
+    expand: "time_slot",
   });
 }
 

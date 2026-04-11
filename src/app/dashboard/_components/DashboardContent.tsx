@@ -7,14 +7,18 @@ import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BOOKING_STATUS } from "@/lib/constants";
-import { useUpdateBookingStatus, useUserBookings } from "@/queries/bookings";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUpdateBookingStatus, useUserBookings, userBookingsKey } from "@/queries/bookings";
 import { useServices } from "@/queries/services";
 import { useTimeSlotsBasic } from "@/queries/time-slots";
-import type { Booking } from "@/services/bookings";
+import type { BookingWithExpand } from "@/services/bookings";
 import { pb } from "@/services/pb";
 
 function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
+  const isoDate = dateStr.includes(".")
+    ? dateStr.split(".").reverse().join("-")
+    : dateStr.slice(0, 10);
+  const date = new Date(`${isoDate}T00:00`);
   return date.toLocaleDateString("ru-RU", {
     day: "numeric",
     month: "long",
@@ -22,11 +26,16 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function parseSlotDate(date: string, time: string): Date {
+  const isoDate = date.includes(".")
+    ? date.split(".").reverse().join("-")
+    : date.slice(0, 10);
+  return new Date(`${isoDate}T${time.slice(0, 5)}`);
+}
+
 function isSlotExpired(date: string, time: string): boolean {
-  const [year, month, day] = date.split("-").map(Number);
-  const [hours, minutes] = time.split(":").map(Number);
-  const slotDate = new Date(year, month - 1, day, hours, minutes);
-  return slotDate < new Date();
+  const slotDate = parseSlotDate(date, time);
+  return !Number.isNaN(slotDate.getTime()) && slotDate < new Date();
 }
 
 function formatTime(startTime: string, durationMinutes: number): string {
@@ -76,6 +85,7 @@ export function DashboardContent() {
     useServices();
   const { data: slotsList = [], isLoading: isSlotsLoading } =
     useTimeSlotsBasic();
+  const queryClient = useQueryClient();
   const updateStatus = useUpdateBookingStatus();
   const { mutate: cancelBooking } = updateStatus;
 
@@ -94,7 +104,24 @@ export function DashboardContent() {
     }
   }, [cancelledParam, bookingIdParam, cancelBooking]);
 
-  async function handlePay(booking: Booking) {
+  useEffect(() => {
+    if (loading) return;
+    const expiredPending = bookings.filter((booking) => {
+      if (booking.status !== BOOKING_STATUS.PENDING) return false;
+      const slot = booking.expand?.time_slot ?? timeSlots.get(booking.time_slot);
+      return slot ? isSlotExpired(slot.date, slot.time) : false;
+    });
+    if (expiredPending.length === 0) return;
+    Promise.all(
+      expiredPending.map((booking) =>
+        updateStatus.mutateAsync({ id: booking.id, status: BOOKING_STATUS.CANCELLED }),
+      ),
+    )
+      .then(() => queryClient.invalidateQueries({ queryKey: userBookingsKey }))
+      .catch(() => {});
+  }, [loading]);
+
+  async function handlePay(booking: BookingWithExpand) {
     setPayingId(booking.id);
     try {
       const token = pb.authStore.token;
@@ -155,7 +182,7 @@ export function DashboardContent() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 animate-in fade-in duration-300">
           {bookings.map((booking) => {
             const service = services.get(booking.service);
-            const slot = timeSlots.get(booking.time_slot);
+            const slot = booking.expand?.time_slot ?? timeSlots.get(booking.time_slot);
 
             return (
               <BookingCard
