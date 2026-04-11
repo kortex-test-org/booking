@@ -2,7 +2,6 @@
 
 import { LogOut } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth-context";
@@ -10,11 +9,10 @@ import { logout } from "@/services/auth";
 
 export function Header() {
   const { isValid, isSuperuser, record, isInitialized } = useAuth();
-  const router = useRouter();
 
   function handleLogout() {
     logout();
-    router.push("/");
+    window.location.href = "/";
   }
 
   return (
