@@ -1,12 +1,19 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { BookingCard, type BookingStatus } from "@/components/molecules/booking-card";
+import {
+  BookingCard,
+  type BookingStatus,
+} from "@/components/molecules/booking-card";
 import { useAuth } from "@/lib/auth-context";
-import { getUserBookings, updateBookingStatus, type Booking } from "@/services/bookings";
+import {
+  type Booking,
+  getUserBookings,
+  updateBookingStatus,
+} from "@/services/bookings";
 import { getServices, type Service } from "@/services/services";
 import { getTimeSlotsBasic, type TimeSlot } from "@/services/time-slots";
-import { Loader2 } from "lucide-react";
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -38,7 +45,9 @@ export default function DashboardPage() {
     try {
       await updateBookingStatus(bookingId, "cancelled");
       setBookings((prev) =>
-        prev.map((b) => (b.id === bookingId ? { ...b, status: "cancelled" } : b))
+        prev.map((b) =>
+          b.id === bookingId ? { ...b, status: "cancelled" } : b,
+        ),
       );
     } catch (err) {
       console.error("Cancel error:", err);
@@ -63,10 +72,16 @@ export default function DashboardPage() {
         setServices(new Map(servicesList.map((s) => [s.id, s])));
         setTimeSlots(new Map(slotsList.map((s) => [s.id, s])));
       })
-      .catch((err) => { if (!cancelled) console.error("Dashboard fetch error:", err); })
-      .finally(() => { if (!cancelled) setLoading(false); });
+      .catch((err) => {
+        if (!cancelled) console.error("Dashboard fetch error:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [isInitialized, isValid, record?.id]);
 
   if (!isInitialized || !isValid) {
@@ -80,8 +95,12 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Мои бронирования</h1>
-        <p className="text-muted-foreground">Здесь отображается история ваших записей и их текущий статус.</p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
+          Мои бронирования
+        </h1>
+        <p className="text-muted-foreground">
+          Здесь отображается история ваших записей и их текущий статус.
+        </p>
       </div>
 
       {loading ? (
@@ -103,7 +122,7 @@ export default function DashboardPage() {
                 time={
                   slot?.time && service?.duration_minutes
                     ? formatTime(slot.time, service.duration_minutes)
-                    : slot?.time ?? "—"
+                    : (slot?.time ?? "—")
                 }
                 status={booking.status as BookingStatus}
                 price={service?.price ?? 0}
@@ -116,7 +135,9 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="py-20 text-center flex flex-col items-center justify-center border-2 border-dashed rounded-xl bg-muted/10">
-          <p className="text-muted-foreground mb-4">У вас пока нет активных бронирований</p>
+          <p className="text-muted-foreground mb-4">
+            У вас пока нет активных бронирований
+          </p>
         </div>
       )}
     </div>

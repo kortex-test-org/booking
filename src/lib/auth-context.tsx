@@ -1,7 +1,13 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { AuthRecord } from "pocketbase";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { pb } from "@/services/pb";
 
 interface AuthState {

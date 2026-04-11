@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { CalendarCheck, Menu, Scissors, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarCheck, Scissors, Menu, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Бронирования", icon: CalendarCheck, exact: true },
@@ -29,7 +34,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
               "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors",
               active
                 ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
@@ -65,7 +70,7 @@ function MobileNavContent({ onClose }: { onClose: () => void }) {
                 "flex items-center gap-4 rounded-xl px-5 py-4 text-base font-medium transition-colors",
                 active
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground bg-muted hover:bg-muted/80 hover:text-foreground"
+                  : "text-muted-foreground bg-muted hover:bg-muted/80 hover:text-foreground",
               )}
             >
               <Icon className="h-5 w-5 shrink-0" />
@@ -77,7 +82,10 @@ function MobileNavContent({ onClose }: { onClose: () => void }) {
       <div className="px-4 pb-8 pt-2">
         <SheetClose
           render={
-            <Button variant="outline" className="w-full h-12 rounded-xl text-base gap-2" />
+            <Button
+              variant="outline"
+              className="w-full h-12 rounded-xl text-base gap-2"
+            />
           }
         >
           <X className="h-5 w-5" />
@@ -105,7 +113,11 @@ export function AdminMobileSidebarTrigger() {
       >
         <Menu className="h-5 w-5" />
       </SheetTrigger>
-      <SheetContent side="bottom" showCloseButton={false} className="p-0 rounded-t-2xl">
+      <SheetContent
+        side="bottom"
+        showCloseButton={false}
+        className="p-0 rounded-t-2xl"
+      >
         <MobileNavContent onClose={() => setOpen(false)} />
       </SheetContent>
     </Sheet>

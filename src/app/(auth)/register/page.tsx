@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ClientResponseError } from "pocketbase";
+import { useState } from "react";
 import { AuthLayout } from "@/components/templates/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ClientResponseError } from "pocketbase";
-import { registerUser, loginUser } from "@/services/auth";
+import { loginUser, registerUser } from "@/services/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -30,14 +30,18 @@ export default function RegisterPage() {
         const emailErr = err.response?.data?.email?.code;
         const passErr = err.response?.data?.password?.code;
         if (emailErr === "validation_not_unique") {
-          setError("Этот email уже зарегистрирован. Войдите или используйте другой адрес.");
+          setError(
+            "Этот email уже зарегистрирован. Войдите или используйте другой адрес.",
+          );
         } else if (passErr === "validation_length_out_of_range") {
           setError("Пароль слишком короткий. Минимум 8 символов.");
         } else {
           setError(err.message || "Не удалось зарегистрироваться.");
         }
       } else {
-        setError("Не удалось зарегистрироваться. Проверьте данные и попробуйте снова.");
+        setError(
+          "Не удалось зарегистрироваться. Проверьте данные и попробуйте снова.",
+        );
       }
     } finally {
       setLoading(false);

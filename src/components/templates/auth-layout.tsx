@@ -1,5 +1,5 @@
-import { ReactNode } from "react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 export function AuthLayout({
   children,
@@ -29,7 +29,9 @@ export function AuthLayout({
           className="flex items-center gap-2 justify-center mb-8 hover:opacity-80 transition-opacity"
         >
           <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-sm">
-            <span className="text-primary-foreground font-black text-lg leading-none">P</span>
+            <span className="text-primary-foreground font-black text-lg leading-none">
+              P
+            </span>
           </div>
           <span className="font-bold text-xl tracking-tighter">Prime.</span>
         </Link>
@@ -48,7 +50,10 @@ export function AuthLayout({
 
         {/* Ссылка переключения */}
         <p className="text-center text-sm text-muted-foreground mt-5">
-          <Link href={linkHref} className="font-medium text-foreground hover:underline underline-offset-4">
+          <Link
+            href={linkHref}
+            className="font-medium text-foreground hover:underline underline-offset-4"
+          >
             {linkText}
           </Link>
         </p>

@@ -1,9 +1,9 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { logout } from "@/services/auth";
 
@@ -25,7 +25,9 @@ export function Header() {
             className="font-bold text-xl tracking-tighter hover:opacity-80 transition-opacity flex items-center gap-2"
           >
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-black leading-none">P</span>
+              <span className="text-primary-foreground font-black leading-none">
+                P
+              </span>
             </div>
             Prime.
           </Link>
@@ -33,11 +35,15 @@ export function Header() {
             <nav className="flex items-center gap-1">
               {isSuperuser ? (
                 <Link href="/admin">
-                  <Button variant="ghost" className="font-medium">Админка</Button>
+                  <Button variant="ghost" className="font-medium">
+                    Админка
+                  </Button>
                 </Link>
               ) : (
                 <Link href="/dashboard">
-                  <Button variant="ghost" className="font-medium">Мои записи</Button>
+                  <Button variant="ghost" className="font-medium">
+                    Мои записи
+                  </Button>
                 </Link>
               )}
             </nav>
@@ -47,7 +53,10 @@ export function Header() {
           {!isValid ? (
             <>
               <Link href="/login">
-                <Button variant="ghost" className="hidden sm:inline-flex font-medium">
+                <Button
+                  variant="ghost"
+                  className="hidden sm:inline-flex font-medium"
+                >
                   Войти
                 </Button>
               </Link>
@@ -60,8 +69,8 @@ export function Header() {
               <span className="hidden sm:inline text-xs text-muted-foreground font-medium">
                 {isSuperuser
                   ? "Администратор"
-                  : (record as { name?: string; email?: string } | null)?.name ??
-                    (record as { email?: string } | null)?.email}
+                  : ((record as { name?: string; email?: string } | null)
+                      ?.name ?? (record as { email?: string } | null)?.email)}
               </span>
               <Button
                 variant="ghost"
