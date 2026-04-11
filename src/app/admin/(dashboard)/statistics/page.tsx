@@ -442,10 +442,10 @@ const loading = bookingsLoading;
                     borderRadius: 8,
                     fontSize: 12,
                   }}
-                  formatter={(value: number | undefined) => [
-                    `\u20ac${(value ?? 0).toFixed(2)}`,
-                    revenueTitle,
-                  ]}
+                  formatter={(value) => {
+                    const num = typeof value === "number" ? value : 0;
+                    return [`\u20ac${num.toFixed(2)}`, revenueTitle];
+                  }}
                 />
                 <Area
                   type="monotone"
@@ -503,7 +503,7 @@ const loading = bookingsLoading;
                     borderRadius: 8,
                     fontSize: 12,
                   }}
-                  formatter={(value: number | string) => [value, "Броней"]}
+                  formatter={(value) => [value ?? 0, "Броней"]}
                 />
                 <Bar
                   dataKey="bookings"
@@ -553,10 +553,10 @@ const loading = bookingsLoading;
                     borderRadius: 8,
                     fontSize: 12,
                   }}
-                  formatter={(value: number | undefined) => [
-                    `\u20ac${(value ?? 0).toFixed(2)}`,
-                    "Доход",
-                  ]}
+                  formatter={(value) => {
+                    const num = typeof value === "number" ? value : 0;
+                    return [`\u20ac${num.toFixed(2)}`, "Доход"];
+                  }}
                 />
                 <Bar
                   dataKey="revenue"
