@@ -30,3 +30,5 @@ A booking application built with Next.js and PocketBase.
 - shadcn/ui components install to @/components/ui directory.
 - All pages text on russian.
 - All prices in euro.
+- All pages text on russian.
+- All prices in euro.
