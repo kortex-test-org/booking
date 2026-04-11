@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 export async function POST(req: Request) {
   try {
-    const { serviceId, timeSlotId } = await req.json();
+    const { serviceId, timeSlotId, bookingId: existingBookingId, cancelUrl } = await req.json();
 
     if (!serviceId || !timeSlotId) {
       return NextResponse.json(
@@ -81,9 +81,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // Проверяем, не занят ли слот
+    // Проверяем, не занят ли слот (исключая текущую pending-запись, если переоплачиваем)
     const slotBookings = slot.expand?.bookings_via_time_slot || [];
-    const isBooked = slotBookings.some((b: any) => b.status !== "cancelled");
+    const isBooked = slotBookings.some(
+      (b: any) => b.status !== "cancelled" && b.id !== existingBookingId,
+    );
 
     if (isBooked) {
       return NextResponse.json(
@@ -92,10 +94,30 @@ export async function POST(req: Request) {
       );
     }
 
+    // Удаляем отменённые записи для этого слота перед созданием новой
+    const cancelledBookings = slotBookings.filter(
+      (b: any) => b.status === "cancelled",
+    );
+    if (cancelledBookings.length > 0) {
+      await Promise.allSettled(
+        cancelledBookings.map((b: any) => pb.collection("bookings").delete(b.id)),
+      );
+    }
+
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       req.headers.get("origin") ||
       "http://localhost:3000";
+
+    // Если переоплачиваем существующую запись — реиспользуем её, иначе создаём новую
+    const booking = existingBookingId
+      ? await pb.collection("bookings").getOne(existingBookingId)
+      : await pb.collection("bookings").create({
+          user: userId,
+          service: serviceId,
+          time_slot: timeSlotId,
+          status: "pending",
+        });
 
     // Создаем Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -117,11 +139,14 @@ export async function POST(req: Request) {
       ],
       mode: "payment",
       success_url: `${baseUrl}/booking/success`,
-      cancel_url: `${baseUrl}/booking/${serviceId}`,
+      cancel_url: cancelUrl
+        ? `${baseUrl}${cancelUrl}?cancelled=1&bookingId=${booking.id}`
+        : `${baseUrl}/booking/${serviceId}?cancelled=1&bookingId=${booking.id}`,
       metadata: {
         userId,
         serviceId,
         timeSlotId,
+        bookingId: booking.id,
       },
     });
 

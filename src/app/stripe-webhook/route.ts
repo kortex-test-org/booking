@@ -61,17 +61,25 @@ export async function POST(req: Request) {
         process.env.POCKETBASE_ADMIN_PASSWORD,
       );
 
-      // Создаем запись о бронировании
-      await pb.collection("bookings").create({
-        user: metadata.userId,
-        service: metadata.serviceId,
-        time_slot: metadata.timeSlotId,
-        status: "paid",
-        stripe_payment_id: session.payment_intent || session.id,
-      });
+      // Обновляем существующую запись бронирования (pending → paid)
+      if (metadata.bookingId) {
+        await pb.collection("bookings").update(metadata.bookingId, {
+          status: "paid",
+          stripe_payment_id: session.payment_intent || session.id,
+        });
+      } else {
+        // Фаллбэк: создаём новую запись (для старых сессий без bookingId)
+        await pb.collection("bookings").create({
+          user: metadata.userId,
+          service: metadata.serviceId,
+          time_slot: metadata.timeSlotId,
+          status: "paid",
+          stripe_payment_id: session.payment_intent || session.id,
+        });
+      }
 
       console.log(
-        `✅ Бронирование создано для пользователя ${metadata.userId} и слота ${metadata.timeSlotId}`,
+        `✅ Бронирование подтверждено для пользователя ${metadata.userId} и слота ${metadata.timeSlotId}`,
       );
     }
 

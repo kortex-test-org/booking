@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   BookingCard,
   type BookingStatus,
@@ -12,6 +13,7 @@ import {
   getUserBookings,
   updateBookingStatus,
 } from "@/services/bookings";
+import { pb } from "@/services/pb";
 import { getServices, type Service } from "@/services/services";
 import { getTimeSlotsBasic, type TimeSlot } from "@/services/time-slots";
 
@@ -39,6 +41,50 @@ export default function DashboardPage() {
   const [timeSlots, setTimeSlots] = useState<Map<string, TimeSlot>>(new Map());
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  // Удаляем pending-запись если пользователь отменил оплату через Stripe
+  useEffect(() => {
+    const cancelled = searchParams.get("cancelled");
+    const bookingId = searchParams.get("bookingId");
+    if (cancelled === "1" && bookingId) {
+      pb.collection("bookings")
+        .delete(bookingId)
+        .catch(() => {
+          // запись уже удалена или не нашлась
+        });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handlePay(booking: Booking) {
+    setPayingId(booking.id);
+    try {
+      const token = pb.authStore.token;
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          serviceId: booking.service,
+          timeSlotId: booking.time_slot,
+          bookingId: booking.id,
+          cancelUrl: "/dashboard",
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      if (data.url) window.location.href = data.url;
+    } catch (err) {
+      console.error("Pay error:", err);
+    } finally {
+      setPayingId(null);
+    }
+  }
 
   async function handleCancel(bookingId: string) {
     setCancellingId(bookingId);
@@ -126,7 +172,8 @@ export default function DashboardPage() {
                 }
                 status={booking.status as BookingStatus}
                 price={service?.price ?? 0}
-                onPay={() => {}}
+                onPay={() => handlePay(booking)}
+                payLoading={payingId === booking.id}
                 onCancel={() => handleCancel(booking.id)}
                 cancelLoading={cancellingId === booking.id}
               />

@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, Clock, CreditCard, X } from "lucide-react";
+import { ArrowRight, CalendarDays, Clock, CreditCard, Loader2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,7 @@ export interface BookingCardProps {
   price: number;
   onPay?: () => void;
   onCancel?: () => void;
+  payLoading?: boolean;
   cancelLoading?: boolean;
 }
 
@@ -44,6 +45,7 @@ export function BookingCard({
   price,
   onPay,
   onCancel,
+  payLoading,
   cancelLoading,
 }: BookingCardProps) {
   const config = statusConfig[status];
@@ -86,9 +88,18 @@ export function BookingCard({
       </CardContent>
       {status === "pending" && (
         <CardFooter className="py-4 px-6 flex gap-2">
-          <Button className="flex-1 group/btn" onClick={onPay}>
-            Перейти к оплате
-            <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover/btn:translate-x-1" />
+          <Button className="flex-1 group/btn" onClick={onPay} disabled={payLoading}>
+            {payLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Загрузка...
+              </>
+            ) : (
+              <>
+                Перейти к оплате
+                <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover/btn:translate-x-1" />
+              </>
+            )}
           </Button>
           <Button
             variant="outline"

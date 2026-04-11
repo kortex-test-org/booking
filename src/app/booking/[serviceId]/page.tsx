@@ -7,7 +7,7 @@ import {
   Hourglass,
   Loader2,
 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TimeSlotPicker } from "@/components/organisms/time-slot-picker";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,21 @@ export default function BookingServicePage() {
   const { data: services = [], isLoading: isServicesLoading } = useServices();
   const service = services.find((s) => s.id === params.serviceId);
   const { isValid, isInitialized } = useAuth();
+  const searchParams = useSearchParams();
+
+  // Отменяем pending-бронирование, если пользователь вернулся с страницы Stripe
+  useEffect(() => {
+    const cancelled = searchParams.get("cancelled");
+    const bookingId = searchParams.get("bookingId");
+    if (cancelled === "1" && bookingId) {
+      pb.collection("bookings")
+        .delete(bookingId)
+        .catch(() => {
+          // запись уже обработана или не нашлась
+        });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (isInitialized && !isValid) {
