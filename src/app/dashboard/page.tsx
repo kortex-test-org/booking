@@ -1,19 +1,17 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  BookingCard,
-  type BookingStatus,
-} from "@/components/molecules/booking-card";
+import { BookingCard } from "@/components/molecules/booking-card";
 import { useAuth } from "@/lib/auth-context";
-import {
-  type Booking,
-  getUserBookings,
-  updateBookingStatus,
-} from "@/services/bookings";
-import { getServices, type Service } from "@/services/services";
-import { getTimeSlotsBasic, type TimeSlot } from "@/services/time-slots";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BOOKING_STATUS } from "@/lib/constants";
+import { useUpdateBookingStatus, useUserBookings } from "@/queries/bookings";
+import { useServices } from "@/queries/services";
+import { useTimeSlotsBasic } from "@/queries/time-slots";
+import type { Booking } from "@/services/bookings";
+import { pb } from "@/services/pb";
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -32,65 +30,102 @@ function formatTime(startTime: string, durationMinutes: number): string {
   return `${pad(start.getHours())}:${pad(start.getMinutes())} - ${pad(end.getHours())}:${pad(end.getMinutes())}`;
 }
 
-export default function DashboardPage() {
-  const { record, isValid, isInitialized } = useAuth();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [services, setServices] = useState<Map<string, Service>>(new Map());
-  const [timeSlots, setTimeSlots] = useState<Map<string, TimeSlot>>(new Map());
-  const [loading, setLoading] = useState(true);
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
+function BookingCardSkeleton() {
+  return (
+    <Card className="overflow-hidden border-muted h-full flex flex-col p-0 gap-0">
+      <CardHeader className="bg-muted/30 pt-5 pb-4">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-3 sm:gap-4">
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-5 w-48" />
+          </div>
+          <Skeleton className="h-5 w-24 shrink-0 rounded-full" />
+        </div>
+      </CardHeader>
+      <CardContent className="pt-5 pb-4 flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4">
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+      </CardContent>
+      <CardFooter className="py-4 px-6 flex gap-2">
+        <Skeleton className="h-9 flex-1 rounded-md" />
+        <Skeleton className="h-9 w-24 rounded-md" />
+      </CardFooter>
+    </Card>
+  );
+}
 
-  async function handleCancel(bookingId: string) {
-    setCancellingId(bookingId);
+export default function DashboardPage() {
+  const { isValid, isInitialized } = useAuth();
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  const { data: bookings = [], isLoading: isBookingsLoading } =
+    useUserBookings();
+  const { data: servicesList = [], isLoading: isServicesLoading } =
+    useServices();
+  const { data: slotsList = [], isLoading: isSlotsLoading } =
+    useTimeSlotsBasic();
+  const updateStatus = useUpdateBookingStatus();
+  const { mutate: cancelBooking } = updateStatus;
+
+  const services = new Map(
+    servicesList.map((service) => [service.id, service]),
+  );
+  const timeSlots = new Map(slotsList.map((slot) => [slot.id, slot]));
+  const loading = isBookingsLoading || isServicesLoading || isSlotsLoading;
+
+  const cancelledParam = searchParams.get("cancelled");
+  const bookingIdParam = searchParams.get("bookingId");
+
+  useEffect(() => {
+    if (cancelledParam === "1" && bookingIdParam) {
+      cancelBooking({ id: bookingIdParam, status: BOOKING_STATUS.CANCELLED });
+    }
+  }, [cancelledParam, bookingIdParam, cancelBooking]);
+
+  async function handlePay(booking: Booking) {
+    setPayingId(booking.id);
     try {
-      await updateBookingStatus(bookingId, "cancelled");
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.id === bookingId ? { ...b, status: "cancelled" } : b,
-        ),
-      );
+      const token = pb.authStore.token;
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          serviceId: booking.service,
+          timeSlotId: booking.time_slot,
+          bookingId: booking.id,
+          cancelUrl: "/dashboard",
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      if (data.url) window.location.href = data.url;
     } catch (err) {
-      console.error("Cancel error:", err);
+      console.error("Pay error:", err);
     } finally {
-      setCancellingId(null);
+      setPayingId(null);
     }
   }
 
-  useEffect(() => {
-    if (!isInitialized || !isValid || !record?.id) return;
-
-    let cancelled = false;
-
-    Promise.all([
-      getUserBookings(),
-      getServices({ requestKey: null }),
-      getTimeSlotsBasic(),
-    ])
-      .then(([bookingsList, servicesList, slotsList]) => {
-        if (cancelled) return;
-        setBookings(bookingsList);
-        setServices(new Map(servicesList.map((s) => [s.id, s])));
-        setTimeSlots(new Map(slotsList.map((s) => [s.id, s])));
-      })
+  async function handleCancel(bookingId: string) {
+    setCancellingId(bookingId);
+    await updateStatus
+      .mutateAsync({ id: bookingId, status: BOOKING_STATUS.CANCELLED })
       .catch((err) => {
-        if (!cancelled) console.error("Dashboard fetch error:", err);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        console.error("Cancel error:", err);
       });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isInitialized, isValid, record?.id]);
-
-  if (!isInitialized || !isValid) {
-    return (
-      <div className="py-20 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    setCancellingId(null);
   }
+
+  const showSkeleton = !isInitialized || loading;
 
   return (
     <div>
@@ -103,12 +138,14 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {loading ? (
-        <div className="py-20 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      {showSkeleton ? (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <BookingCardSkeleton key={index} />
+          ))}
         </div>
       ) : bookings.length > 0 ? (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 animate-in fade-in duration-300">
           {bookings.map((booking) => {
             const service = services.get(booking.service);
             const slot = timeSlots.get(booking.time_slot);
@@ -124,9 +161,10 @@ export default function DashboardPage() {
                     ? formatTime(slot.time, service.duration_minutes)
                     : (slot?.time ?? "—")
                 }
-                status={booking.status as BookingStatus}
+                status={booking.status}
                 price={service?.price ?? 0}
-                onPay={() => {}}
+                onPay={() => handlePay(booking)}
+                payLoading={payingId === booking.id}
                 onCancel={() => handleCancel(booking.id)}
                 cancelLoading={cancellingId === booking.id}
               />

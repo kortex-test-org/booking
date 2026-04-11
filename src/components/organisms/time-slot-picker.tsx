@@ -7,28 +7,35 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
-import { useTimeSlots } from "@/queries/time-slots";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BOOKING_STATUS } from "@/lib/constants";
+import type { TimeSlot } from "@/services/time-slots";
 
 interface TimeSlotPickerProps {
   serviceId: string;
+  slots: TimeSlot[];
+  isLoading: boolean;
   onSelectTime: (date: Date, time: string, slotId: string) => void;
 }
 
 export function TimeSlotPicker({
   serviceId,
+  slots,
+  isLoading,
   onSelectTime,
 }: TimeSlotPickerProps) {
   const [date, setDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const { data: slots = [], isLoading } = useTimeSlots();
 
   const availableSlots = useMemo(() => {
     return slots.filter((slot) => {
       if (slot.service !== serviceId) return false;
       const slotBookings: { status: string }[] =
         slot.expand?.bookings_via_time_slot ?? [];
-      const isBooked = slotBookings.some((b) => b.status !== "cancelled");
+      const isBooked = slotBookings.some(
+        (b) => b.status !== BOOKING_STATUS.CANCELLED,
+      );
       return !isBooked;
     });
   }, [slots, serviceId]);
@@ -90,12 +97,12 @@ export function TimeSlotPicker({
   if (!mounted || isLoading) {
     return (
       <div className="flex flex-col md:flex-row gap-8">
-        <Card className="flex-shrink-0 w-[350px] h-[350px] mx-auto md:mx-0 border-muted/50 dark:bg-card/50 backdrop-blur-sm animate-pulse" />
+        <Skeleton className="shrink-0 w-87.5 h-87.5 mx-auto md:mx-0 rounded-xl" />
         <div className="flex-1 space-y-4">
-          <div className="h-8 w-48 bg-muted rounded animate-pulse" />
+          <Skeleton className="h-6 w-48" />
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-10 bg-muted rounded animate-pulse" />
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton key={index} className="h-10 rounded-md" />
             ))}
           </div>
         </div>
@@ -104,8 +111,8 @@ export function TimeSlotPicker({
   }
 
   return (
-    <div className="flex flex-col md:flex-row gap-8">
-      <Card className="flex-shrink-0 w-fit mx-auto md:mx-0 border-muted/50 dark:bg-card/50 backdrop-blur-sm">
+    <div className="flex flex-col md:flex-row gap-8 animate-in fade-in duration-300">
+      <Card className="shrink-0 w-fit mx-auto md:mx-0 border-muted/50 dark:bg-card/50 backdrop-blur-sm">
         <CardContent className="p-0">
           <Calendar
             mode="single"
@@ -147,7 +154,7 @@ export function TimeSlotPicker({
                 <Button
                   key={time}
                   variant={selectedTime === time ? "default" : "outline"}
-                  className={`min-w-[90px] h-10 px-4 transition-all ${
+                  className={`min-w-22.5 h-10 px-4 transition-all ${
                     selectedTime === time
                       ? "shadow-md scale-105"
                       : "hover:border-primary/50 hover:bg-primary/5"

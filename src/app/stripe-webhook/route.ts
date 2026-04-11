@@ -1,23 +1,38 @@
 import { NextResponse } from "next/server";
 import PocketBase from "pocketbase";
 import Stripe from "stripe";
+import { BOOKING_STATUS } from "@/lib/constants";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error("Missing STRIPE_SECRET_KEY environment variable");
+}
+if (!process.env.STRIPE_WEBHOOK_SECRET) {
+  throw new Error("Missing STRIPE_WEBHOOK_SECRET environment variable");
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(req: Request) {
   try {
     const body = await req.text();
-    const signature = req.headers.get("stripe-signature") as string;
+    const signature = req.headers.get("stripe-signature");
+
+    if (!signature) {
+      return NextResponse.json(
+        { error: "Missing stripe-signature header" },
+        { status: 400 },
+      );
+    }
 
     let event: Stripe.Event;
 
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } catch (err: any) {
-      console.error(`⚠️ Ошибка верификации подписи вебхука:`, err.message);
+    } catch (err) {
+      const errMessage = err instanceof Error ? err.message : String(err);
+      console.error(`⚠️ Ошибка верификации подписи вебхука:`, errMessage);
       return NextResponse.json(
-        { error: `Webhook Error: ${err.message}` },
+        { error: `Webhook Error: ${errMessage}` },
         { status: 400 },
       );
     }
@@ -26,7 +41,7 @@ export async function POST(req: Request) {
       event.type === "checkout.session.completed" ||
       event.type === "checkout.session.async_payment_succeeded"
     ) {
-      const session = event.data.object as Stripe.Checkout.Session;
+      const session = event.data.object;
       const metadata = session.metadata;
 
       if (
@@ -61,23 +76,29 @@ export async function POST(req: Request) {
         process.env.POCKETBASE_ADMIN_PASSWORD,
       );
 
-      // Создаем запись о бронировании
-      await pb.collection("bookings").create({
-        user: metadata.userId,
-        service: metadata.serviceId,
-        time_slot: metadata.timeSlotId,
-        status: "paid",
-        stripe_payment_id: session.payment_intent || session.id,
-      });
+      if (metadata.bookingId) {
+        await pb.collection("bookings").update(metadata.bookingId, {
+          status: BOOKING_STATUS.PAID,
+          stripe_payment_id: session.payment_intent || session.id,
+        });
+      } else {
+        await pb.collection("bookings").create({
+          user: metadata.userId,
+          service: metadata.serviceId,
+          time_slot: metadata.timeSlotId,
+          status: BOOKING_STATUS.PAID,
+          stripe_payment_id: session.payment_intent || session.id,
+        });
+      }
 
       console.log(
-        `✅ Бронирование создано для пользователя ${metadata.userId} и слота ${metadata.timeSlotId}`,
+        `✅ Бронирование подтверждено для пользователя ${metadata.userId} и слота ${metadata.timeSlotId}`,
       );
     }
 
     // Возвращаем 200 для подтверждения получения вебхука
     return NextResponse.json({ received: true }, { status: 200 });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Ошибка обработки вебхука:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },

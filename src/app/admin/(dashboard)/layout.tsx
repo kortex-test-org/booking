@@ -9,7 +9,11 @@ import {
 import { Header } from "@/components/organisms/header";
 import { useAuth } from "@/lib/auth-context";
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+interface AdminLayoutProps {
+  children: ReactNode;
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
   const { isValid, isSuperuser } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);

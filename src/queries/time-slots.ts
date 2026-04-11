@@ -3,12 +3,22 @@ import {
   createTimeSlot,
   deleteTimeSlot,
   getTimeSlots,
+  getTimeSlotsBasic,
 } from "@/services/time-slots";
 
 export const timeSlotsKey = ["time_slots"] as const;
+export const timeSlotsBasicKey = ["time_slots_basic"] as const;
 
 export function useTimeSlots() {
   return useQuery({ queryKey: timeSlotsKey, queryFn: getTimeSlots, retry: 1 });
+}
+
+export function useTimeSlotsBasic() {
+  return useQuery({
+    queryKey: timeSlotsBasicKey,
+    queryFn: getTimeSlotsBasic,
+    retry: 1,
+  });
 }
 
 export function useCreateTimeSlot() {

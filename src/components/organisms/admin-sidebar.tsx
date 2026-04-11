@@ -18,7 +18,11 @@ const NAV_ITEMS = [
   { href: "/admin/services", label: "Услуги", icon: Scissors, exact: false },
 ];
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+interface NavLinksProps {
+  onNavigate?: () => void;
+}
+
+function NavLinks({ onNavigate }: NavLinksProps) {
   const pathname = usePathname();
 
   return (
@@ -54,7 +58,11 @@ export function AdminSidebar() {
   );
 }
 
-function MobileNavContent({ onClose }: { onClose: () => void }) {
+interface MobileNavContentProps {
+  onClose: () => void;
+}
+
+function MobileNavContent({ onClose }: MobileNavContentProps) {
   const pathname = usePathname();
   return (
     <>

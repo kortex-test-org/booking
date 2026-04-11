@@ -2,18 +2,18 @@
 
 import { LogOut } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth-context";
 import { logout } from "@/services/auth";
 
 export function Header() {
-  const { isValid, isSuperuser, record } = useAuth();
-  const router = useRouter();
+  const { isValid, isSuperuser, record, isInitialized } = useAuth();
 
   function handleLogout() {
     logout();
-    router.push("/");
+    window.location.href = "/";
   }
 
   return (
@@ -31,8 +31,8 @@ export function Header() {
             </div>
             Prime.
           </Link>
-          {isValid && (
-            <nav className="flex items-center gap-1">
+          {isInitialized && isValid && (
+            <nav className="flex items-center gap-1 animate-in fade-in duration-300">
               {isSuperuser ? (
                 <Link href="/admin">
                   <Button variant="ghost" className="font-medium">
@@ -50,8 +50,14 @@ export function Header() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          {!isValid ? (
+          <ThemeToggle />
+          {!isInitialized ? (
             <>
+              <Skeleton className="hidden sm:block h-9 w-16 rounded-md" />
+              <Skeleton className="h-9 w-16 rounded-md" />
+            </>
+          ) : !isValid ? (
+            <div className="flex items-center gap-3 animate-in fade-in duration-300">
               <Link href="/login">
                 <Button
                   variant="ghost"
@@ -63,14 +69,13 @@ export function Header() {
               <Link href="/register">
                 <Button className="font-medium shadow-sm">Старт</Button>
               </Link>
-            </>
+            </div>
           ) : (
-            <>
+            <div className="flex items-center gap-3 animate-in fade-in duration-300">
               <span className="hidden sm:inline text-xs text-muted-foreground font-medium">
                 {isSuperuser
                   ? "Администратор"
-                  : ((record as { name?: string; email?: string } | null)
-                      ?.name ?? (record as { email?: string } | null)?.email)}
+                  : (record?.name ?? record?.email)}
               </span>
               <Button
                 variant="ghost"
@@ -80,7 +85,7 @@ export function Header() {
                 <LogOut className="w-4 h-4 mr-2" />
                 Выход
               </Button>
-            </>
+            </div>
           )}
         </div>
       </div>

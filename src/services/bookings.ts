@@ -1,11 +1,14 @@
 import type { RecordModel } from "pocketbase";
+import type { BookingStatus } from "@/lib/constants";
 import { pb } from "./pb";
+
+export type { BookingStatus };
 
 export interface Booking extends RecordModel {
   user: string;
   service: string;
   time_slot: string;
-  status: "pending" | "paid" | "cancelled";
+  status: BookingStatus;
   stripe_payment_id?: string;
 }
 

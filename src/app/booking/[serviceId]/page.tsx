@@ -7,7 +7,7 @@ import {
   Hourglass,
   Loader2,
 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TimeSlotPicker } from "@/components/organisms/time-slot-picker";
 import { Badge } from "@/components/ui/badge";
@@ -19,13 +19,70 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth-context";
+import { BOOKING_STATUS } from "@/lib/constants";
+import { useUpdateBookingStatus } from "@/queries/bookings";
 import { useServices } from "@/queries/services";
+import { useTimeSlots } from "@/queries/time-slots";
 import { pb } from "@/services/pb";
+
+function BookingPageSkeleton() {
+  return (
+    <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 max-w-5xl">
+      <div className="mb-8 space-y-3">
+        <Skeleton className="h-5 w-24 rounded-full" />
+        <Skeleton className="h-11 w-72 md:w-96" />
+        <Skeleton className="h-5 w-80" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <Skeleton className="h-80 w-full rounded-xl" />
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <Skeleton key={index} className="h-10 rounded-md" />
+            ))}
+          </div>
+        </div>
+
+        <div className="lg:col-span-1">
+          <div className="rounded-xl border bg-card shadow-lg overflow-hidden">
+            <div className="bg-muted/30 p-6 space-y-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+            <div className="p-6 space-y-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="flex gap-3">
+                  <Skeleton className="h-5 w-5 shrink-0 rounded" />
+                  <div className="space-y-1.5 flex-1">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </div>
+              ))}
+              <div className="border-t pt-4 mt-2 space-y-4">
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-7 w-16" />
+                </div>
+                <Skeleton className="h-12 w-full rounded-xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function BookingServicePage() {
   const params = useParams();
   const router = useRouter();
+  const serviceId = Array.isArray(params.serviceId)
+    ? params.serviceId[0]
+    : (params.serviceId ?? "");
   const [selectedDateTime, setSelectedDateTime] = useState<{
     date: Date;
     time: string;
@@ -34,8 +91,20 @@ export default function BookingServicePage() {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   const { data: services = [], isLoading: isServicesLoading } = useServices();
-  const service = services.find((s) => s.id === params.serviceId);
+  const { data: slots = [], isLoading: isSlotsLoading } = useTimeSlots();
+  const service = services.find((s) => s.id === serviceId);
   const { isValid, isInitialized } = useAuth();
+  const searchParams = useSearchParams();
+  const { mutate: cancelBooking } = useUpdateBookingStatus();
+
+  const cancelledParam = searchParams.get("cancelled");
+  const bookingIdParam = searchParams.get("bookingId");
+
+  useEffect(() => {
+    if (cancelledParam === "1" && bookingIdParam) {
+      cancelBooking({ id: bookingIdParam, status: BOOKING_STATUS.CANCELLED });
+    }
+  }, [cancelledParam, bookingIdParam, cancelBooking]);
 
   useEffect(() => {
     if (isInitialized && !isValid) {
@@ -65,7 +134,7 @@ export default function BookingServicePage() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          serviceId: params.serviceId,
+          serviceId: serviceId,
           timeSlotId: selectedDateTime.slotId,
         }),
       });
@@ -87,12 +156,11 @@ export default function BookingServicePage() {
     }
   };
 
-  if (!isInitialized || (isInitialized && !isValid) || isServicesLoading) {
-    return (
-      <div className="container mx-auto px-4 md:px-8 py-24 flex justify-center items-center min-h-[50vh]">
-        <Loader2 className="w-10 h-10 animate-spin text-primary/50" />
-      </div>
-    );
+  const showSkeleton =
+    !isInitialized || !isValid || isServicesLoading || isSlotsLoading;
+
+  if (showSkeleton) {
+    return <BookingPageSkeleton />;
   }
 
   if (!service) {
@@ -112,7 +180,7 @@ export default function BookingServicePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 max-w-5xl">
+    <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 max-w-5xl animate-in fade-in duration-300">
       <div className="mb-8">
         <Badge variant="secondary" className="mb-4">
           Бронирование
@@ -130,7 +198,9 @@ export default function BookingServicePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <TimeSlotPicker
-            serviceId={params.serviceId as string}
+            serviceId={serviceId}
+            slots={slots}
+            isLoading={isSlotsLoading}
             onSelectTime={handleTimeSelect}
           />
         </div>

@@ -2,12 +2,26 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import PocketBase from "pocketbase";
 import Stripe from "stripe";
+import { BOOKING_STATUS } from "@/lib/constants";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error("Missing STRIPE_SECRET_KEY environment variable");
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+interface SlotBooking {
+  id: string;
+  status: string;
+}
 
 export async function POST(req: Request) {
   try {
-    const { serviceId, timeSlotId } = await req.json();
+    const {
+      serviceId,
+      timeSlotId,
+      bookingId: existingBookingId,
+      cancelUrl,
+    } = await req.json();
 
     if (!serviceId || !timeSlotId) {
       return NextResponse.json(
@@ -81,9 +95,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Проверяем, не занят ли слот
-    const slotBookings = slot.expand?.bookings_via_time_slot || [];
-    const isBooked = slotBookings.some((b: any) => b.status !== "cancelled");
+    const slotBookings: SlotBooking[] =
+      slot.expand?.bookings_via_time_slot ?? [];
+    const isBooked = slotBookings.some(
+      (booking) =>
+        booking.status !== "cancelled" && booking.id !== existingBookingId,
+    );
 
     if (isBooked) {
       return NextResponse.json(
@@ -92,10 +109,31 @@ export async function POST(req: Request) {
       );
     }
 
+    const cancelledBookings = slotBookings.filter(
+      (booking) => booking.status === "cancelled",
+    );
+    if (cancelledBookings.length > 0) {
+      await Promise.allSettled(
+        cancelledBookings.map((booking) =>
+          pb.collection("bookings").delete(booking.id),
+        ),
+      );
+    }
+
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       req.headers.get("origin") ||
       "http://localhost:3000";
+
+    // Если переоплачиваем существующую запись — реиспользуем её, иначе создаём новую
+    const booking = existingBookingId
+      ? await pb.collection("bookings").getOne(existingBookingId)
+      : await pb.collection("bookings").create({
+          user: userId,
+          service: serviceId,
+          time_slot: timeSlotId,
+          status: BOOKING_STATUS.PENDING,
+        });
 
     // Создаем Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -117,20 +155,22 @@ export async function POST(req: Request) {
       ],
       mode: "payment",
       success_url: `${baseUrl}/booking/success`,
-      cancel_url: `${baseUrl}/booking/${serviceId}`,
+      cancel_url: cancelUrl
+        ? `${baseUrl}${cancelUrl}?cancelled=1&bookingId=${booking.id}`
+        : `${baseUrl}/booking/${serviceId}?cancelled=1&bookingId=${booking.id}`,
       metadata: {
         userId,
         serviceId,
         timeSlotId,
+        bookingId: booking.id,
       },
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Checkout API error:", error);
-    return NextResponse.json(
-      { error: error.message || "Внутренняя ошибка сервера" },
-      { status: 500 },
-    );
+    const message =
+      error instanceof Error ? error.message : "Внутренняя ошибка сервера";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,9 +1,4 @@
----
-id: project
-category: project
-description: Project-specific context and conventions
----
-
+]633;E;body "$RULES_BASE/project.md";ebce9ced-6341-4444-83e7-b8be7066142b]633;C
 # Project: Booking App
 
 ## Description
@@ -30,5 +25,5 @@ A booking application built with Next.js and PocketBase.
 - shadcn/ui components install to @/components/ui directory.
 - All pages text on russian.
 - All prices in euro.
-- All pages text on russian.
-- All prices in euro.
+
+Detailed coding rules are split into instruction files in `.github/instructions/`.

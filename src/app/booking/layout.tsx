@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import { MainLayout } from "@/components/templates/main-layout";
 
-export default function BookingLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+interface BookingLayoutProps {
+  children: ReactNode;
+}
+
+export default function BookingLayout({ children }: BookingLayoutProps) {
   return <MainLayout>{children}</MainLayout>;
 }
