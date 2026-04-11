@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { Eye, EyeOff, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,6 +93,14 @@ const EMPTY_BOOKING_FORM = {
   status: BOOKING_STATUS.PENDING,
 };
 
+function isSlotExpired(date: string, time: string): boolean {
+  const isoDate = date.includes(".")
+    ? date.split(".").reverse().join("-")
+    : date.slice(0, 10);
+  const slotDate = new Date(`${isoDate}T${time.slice(0, 5)}`);
+  return !Number.isNaN(slotDate.getTime()) && slotDate < new Date();
+}
+
 export default function AdminDashboardPage() {
   const [slotOpen, setSlotOpen] = useState(false);
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
@@ -101,6 +109,8 @@ export default function AdminDashboardPage() {
 
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingForm, setBookingForm] = useState(EMPTY_BOOKING_FORM);
+  const [showExpired, setShowExpired] = useState(false);
+  const [showExpiredSlots, setShowExpiredSlots] = useState(false);
 
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: slots = [], isLoading: slotsLoading } = useTimeSlots();
@@ -111,6 +121,18 @@ export default function AdminDashboardPage() {
   const updateStatus = useUpdateBookingStatus();
   const deleteBooking = useDeleteBooking();
   const createBooking = useCreateBooking();
+
+  const visibleBookings = showExpired
+    ? bookings
+    : bookings.filter((booking) => {
+        const slot = booking.expand?.time_slot;
+        if (!slot) return true;
+        return !isSlotExpired(slot.date, slot.time);
+      });
+
+  const visibleSlots = showExpiredSlots
+    ? slots
+    : slots.filter((slot) => !isSlotExpired(slot.date, slot.time));
 
   const availableSlotsForForm = slots.filter((s) => {
     if (bookingForm.serviceId && s.service !== bookingForm.serviceId)
@@ -155,7 +177,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="mb-4 flex flex-col gap-2">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
             Управление бронированиями
@@ -165,10 +187,24 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={() => setShowExpired((v) => !v)}
+          >
+            {showExpired ? (
+              <EyeOff className="h-4 w-4 mr-1" />
+            ) : (
+              <Eye className="h-4 w-4 mr-1" />
+            )}
+            {showExpired ? "Скрыть истёкшие" : "Показать истёкшие"}
+          </Button>
+          <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
           <DialogTrigger
             render={
-              <Button size="sm">
+              <Button size="sm" className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-1" />
                 Создать бронь
               </Button>
@@ -318,6 +354,7 @@ export default function AdminDashboardPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="rounded-md border overflow-hidden">
@@ -343,17 +380,17 @@ export default function AdminDashboardPage() {
                 </TableRow>
               ))
             )}
-            {!bookingsLoading && bookings.length === 0 && (
+            {!bookingsLoading && visibleBookings.length === 0 && (
               <TableRow>
                 <TableCell
                   colSpan={5}
                   className="text-center text-muted-foreground py-8"
                 >
-                  Бронирований нет
+                  {bookings.length === 0 ? "Бронирований нет" : "Нет активных бронирований"}
                 </TableCell>
               </TableRow>
             )}
-            {bookings.map((booking) => {
+            {visibleBookings.map((booking) => {
               const service = booking.expand?.service;
               const slot = booking.expand?.time_slot;
               const user = booking.expand?.user;
@@ -363,6 +400,7 @@ export default function AdminDashboardPage() {
                   b.time_slot === booking.time_slot &&
                   b.status !== BOOKING_STATUS.CANCELLED,
               );
+              const expired = slot ? isSlotExpired(slot.date, slot.time) : false;
               return (
                 <TableRow key={booking.id}>
                   <TableCell className="font-medium">
@@ -379,22 +417,29 @@ export default function AdminDashboardPage() {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        booking.status === BOOKING_STATUS.PAID
-                          ? "default"
-                          : booking.status === BOOKING_STATUS.CANCELLED
-                            ? "destructive"
-                            : "outline"
-                      }
-                      className={
-                        booking.status === BOOKING_STATUS.PAID
-                          ? "bg-green-500 hover:bg-green-600"
-                          : ""
-                      }
-                    >
-                      {STATUS_LABEL[booking.status] ?? booking.status}
-                    </Badge>
+                    <div className="flex flex-wrap gap-1">
+                      {expired && (
+                        <Badge variant="secondary" className="text-muted-foreground">
+                          Истёк
+                        </Badge>
+                      )}
+                      <Badge
+                        variant={
+                          booking.status === BOOKING_STATUS.PAID
+                            ? "default"
+                            : booking.status === BOOKING_STATUS.CANCELLED
+                              ? "destructive"
+                              : "outline"
+                        }
+                        className={
+                          booking.status === BOOKING_STATUS.PAID
+                            ? "bg-green-500 hover:bg-green-600"
+                            : ""
+                        }
+                      >
+                        {STATUS_LABEL[booking.status] ?? booking.status}
+                      </Badge>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -467,14 +512,28 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="mt-12">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-2 mb-4 gap-3">
+        <div className="flex flex-col gap-2 mb-2">
           <h2 className="text-xl font-bold tracking-tight">
             Управление доступностью (Слоты)
           </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setShowExpiredSlots((v) => !v)}
+            >
+              {showExpiredSlots ? (
+                <EyeOff className="h-4 w-4 mr-1" />
+              ) : (
+                <Eye className="h-4 w-4 mr-1" />
+              )}
+              {showExpiredSlots ? "Скрыть истёкшие" : "Показать истёкшие"}
+            </Button>
           <Dialog open={slotOpen} onOpenChange={setSlotOpen}>
             <DialogTrigger
               render={
-                <Button size="sm">
+                <Button size="sm" className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-1" />
                   Добавить слот
                 </Button>
@@ -549,6 +608,7 @@ export default function AdminDashboardPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         <div className="rounded-md border overflow-hidden">
@@ -574,22 +634,23 @@ export default function AdminDashboardPage() {
                   </TableRow>
                 ))
               )}
-              {!slotsLoading && slots.length === 0 && (
+              {!slotsLoading && visibleSlots.length === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={5}
                     className="text-center text-muted-foreground py-8"
                   >
-                    Слоты не найдены
+                    {slots.length === 0 ? "Слоты не найдены" : "Нет актуальных слотов"}
                   </TableCell>
                 </TableRow>
               )}
-              {slots.map((slot) => {
+              {visibleSlots.map((slot) => {
                 const slotBookings: { status: string }[] =
                   slot.expand?.bookings_via_time_slot ?? [];
                 const isBooked = slotBookings.some(
                   (b) => b.status !== BOOKING_STATUS.CANCELLED,
                 );
+                const expired = isSlotExpired(slot.date, slot.time);
                 const serviceName = slot.expand?.service?.name ?? "—";
                 return (
                   <TableRow key={slot.id}>
@@ -599,14 +660,21 @@ export default function AdminDashboardPage() {
                       {serviceName}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={isBooked ? "destructive" : "outline"}
-                        className={
-                          !isBooked ? "text-green-600 border-green-400" : ""
-                        }
-                      >
-                        {isBooked ? "Занят" : "Свободен"}
-                      </Badge>
+                      <div className="flex flex-wrap gap-1">
+                        {expired && (
+                          <Badge variant="secondary" className="text-muted-foreground">
+                            Истёк
+                          </Badge>
+                        )}
+                        <Badge
+                          variant={isBooked ? "destructive" : "outline"}
+                          className={
+                            !isBooked ? "text-green-600 border-green-400" : ""
+                          }
+                        >
+                          {isBooked ? "Занят" : "Свободен"}
+                        </Badge>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Button

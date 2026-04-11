@@ -35,10 +35,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <Header />
 
       <div className="flex-1 container mx-auto px-4 md:px-8 py-8 max-w-6xl">
-        <div className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">
+        <div className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Админ Панель
         </div>
-
         <div className="flex gap-6 items-start">
           <AdminSidebar />
 
