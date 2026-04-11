@@ -4,17 +4,24 @@ import PocketBase from "pocketbase";
 import Stripe from "stripe";
 import { BOOKING_STATUS } from "@/lib/constants";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("Missing STRIPE_SECRET_KEY environment variable");
-}
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 interface SlotBooking {
   id: string;
   status: string;
 }
 
 export async function POST(req: Request) {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+  if (!stripeSecretKey) {
+    console.error("Missing STRIPE_SECRET_KEY environment variable");
+    return NextResponse.json(
+      { error: "Server configuration error" },
+      { status: 500 },
+    );
+  }
+
+  const stripe = new Stripe(stripeSecretKey);
+
   try {
     const {
       serviceId,
