@@ -32,7 +32,7 @@ export async function getUserBookings(): Promise<Booking[]> {
 
 export async function updateBookingStatus(
   id: string,
-  status: Booking["status"]
+  status: Booking["status"],
 ): Promise<Booking> {
   return pb.collection("bookings").update<Booking>(id, { status });
 }

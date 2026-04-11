@@ -1,5 +1,5 @@
 import type { RecordModel } from "pocketbase";
-import { pb, getAdminPb } from "./pb";
+import { getAdminPb, pb } from "./pb";
 
 export interface TimeSlot extends RecordModel {
   service: string;
@@ -27,7 +27,10 @@ export async function getTimeSlotsServer(): Promise<TimeSlot[]> {
       batch: 500,
     });
   } catch (err) {
-    console.error("getTimeSlotsServer: admin auth failed, falling back to unauthenticated request", err);
+    console.error(
+      "getTimeSlotsServer: admin auth failed, falling back to unauthenticated request",
+      err,
+    );
     // Запасной вариант: запрос без авторизации (бронирования будут скрыты)
     return pb.collection("time_slots").getFullList<TimeSlot>({
       sort: "date,time",

@@ -1,26 +1,81 @@
 "use client";
 
-import { useState } from "react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
-import { useTimeSlots, useCreateTimeSlot, useDeleteTimeSlot } from "@/queries/time-slots";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  useBookings,
+  useCreateBooking,
+  useDeleteBooking,
+  useUpdateBookingStatus,
+} from "@/queries/bookings";
 import { useServices } from "@/queries/services";
-import { useBookings, useUpdateBookingStatus, useDeleteBooking, useCreateBooking } from "@/queries/bookings";
+import {
+  useCreateTimeSlot,
+  useDeleteTimeSlot,
+  useTimeSlots,
+} from "@/queries/time-slots";
 import { useUsers } from "@/queries/users";
 
 const TIME_OPTIONS = [
-  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
-  "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
-  "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
-  "17:00", "17:30", "18:00",
+  "08:00",
+  "08:30",
+  "09:00",
+  "09:30",
+  "10:00",
+  "10:30",
+  "11:00",
+  "11:30",
+  "12:00",
+  "12:30",
+  "13:00",
+  "13:30",
+  "14:00",
+  "14:30",
+  "15:00",
+  "15:30",
+  "16:00",
+  "16:30",
+  "17:00",
+  "17:30",
+  "18:00",
 ];
 
 const STATUS_LABEL: Record<string, string> = {
@@ -29,7 +84,12 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled: "Отменено",
 };
 
-const EMPTY_BOOKING_FORM = { userId: "", serviceId: "", slotId: "", status: "pending" as const };
+const EMPTY_BOOKING_FORM = {
+  userId: "",
+  serviceId: "",
+  slotId: "",
+  status: "pending" as const,
+};
 
 export default function AdminDashboardPage() {
   const [slotOpen, setSlotOpen] = useState(false);
@@ -51,8 +111,10 @@ export default function AdminDashboardPage() {
   const createBooking = useCreateBooking();
 
   const availableSlotsForForm = slots.filter((s) => {
-    if (bookingForm.serviceId && s.service !== bookingForm.serviceId) return false;
-    const slotBookings: { status: string }[] = s.expand?.bookings_via_time_slot ?? [];
+    if (bookingForm.serviceId && s.service !== bookingForm.serviceId)
+      return false;
+    const slotBookings: { status: string }[] =
+      s.expand?.bookings_via_time_slot ?? [];
     return !slotBookings.some((b) => b.status !== "cancelled");
   });
 
@@ -66,14 +128,18 @@ export default function AdminDashboardPage() {
           setBookingOpen(false);
           setBookingForm(EMPTY_BOOKING_FORM);
         },
-      }
+      },
     );
   }
 
   function handleCreate() {
     if (!newDate || !newTime || !newServiceId) return;
     createSlot.mutate(
-      { service: newServiceId, date: format(newDate, "yyyy-MM-dd"), time: newTime },
+      {
+        service: newServiceId,
+        date: format(newDate, "yyyy-MM-dd"),
+        time: newTime,
+      },
       {
         onSuccess: () => {
           setSlotOpen(false);
@@ -81,7 +147,7 @@ export default function AdminDashboardPage() {
           setNewTime(null);
           setNewServiceId(null);
         },
-      }
+      },
     );
   }
 
@@ -89,21 +155,29 @@ export default function AdminDashboardPage() {
     <div>
       <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Управление бронированиями</h1>
-          <p className="text-muted-foreground">Обзор всех записей и их статусов.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
+            Управление бронированиями
+          </h1>
+          <p className="text-muted-foreground">
+            Обзор всех записей и их статусов.
+          </p>
         </div>
 
         <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
-          <DialogTrigger render={
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-1" />
-              Создать бронь
-            </Button>
-          } />
+          <DialogTrigger
+            render={
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Создать бронь
+              </Button>
+            }
+          />
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Новое бронирование</DialogTitle>
-              <DialogDescription>Создайте бронирование вручную от имени клиента</DialogDescription>
+              <DialogDescription>
+                Создайте бронирование вручную от имени клиента
+              </DialogDescription>
             </DialogHeader>
 
             <div className="flex flex-col gap-4 py-2">
@@ -111,8 +185,13 @@ export default function AdminDashboardPage() {
                 <label className="text-sm font-medium">Клиент</label>
                 <Select
                   value={bookingForm.userId}
-                  onValueChange={(v) => setBookingForm((f) => ({ ...f, userId: v ?? "" }))}
-                  itemToStringLabel={(v) => { const u = users.find((x) => x.id === v); return u?.name || u?.email || v; }}
+                  onValueChange={(v) =>
+                    setBookingForm((f) => ({ ...f, userId: v ?? "" }))
+                  }
+                  itemToStringLabel={(v) => {
+                    const u = users.find((x) => x.id === v);
+                    return u?.name || u?.email || v;
+                  }}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Выберите клиента" />
@@ -131,15 +210,25 @@ export default function AdminDashboardPage() {
                 <label className="text-sm font-medium">Услуга</label>
                 <Select
                   value={bookingForm.serviceId}
-                  onValueChange={(v) => setBookingForm((f) => ({ ...f, serviceId: v ?? "", slotId: "" }))}
-                  itemToStringLabel={(v) => services.find((s) => s.id === v)?.name ?? v}
+                  onValueChange={(v) =>
+                    setBookingForm((f) => ({
+                      ...f,
+                      serviceId: v ?? "",
+                      slotId: "",
+                    }))
+                  }
+                  itemToStringLabel={(v) =>
+                    services.find((s) => s.id === v)?.name ?? v
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Выберите услугу" />
                   </SelectTrigger>
                   <SelectContent>
                     {services.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -149,16 +238,29 @@ export default function AdminDashboardPage() {
                 <label className="text-sm font-medium">Слот</label>
                 <Select
                   value={bookingForm.slotId}
-                  onValueChange={(v) => setBookingForm((f) => ({ ...f, slotId: v ?? "" }))}
+                  onValueChange={(v) =>
+                    setBookingForm((f) => ({ ...f, slotId: v ?? "" }))
+                  }
                   disabled={!bookingForm.serviceId}
-                  itemToStringLabel={(v) => { const s = availableSlotsForForm.find((x) => x.id === v); return s ? `${s.date} · ${s.time}` : v; }}
+                  itemToStringLabel={(v) => {
+                    const s = availableSlotsForForm.find((x) => x.id === v);
+                    return s ? `${s.date} · ${s.time}` : v;
+                  }}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder={bookingForm.serviceId ? "Выберите слот" : "Сначала выберите услугу"} />
+                    <SelectValue
+                      placeholder={
+                        bookingForm.serviceId
+                          ? "Выберите слот"
+                          : "Сначала выберите услугу"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {availableSlotsForForm.length === 0 && (
-                      <SelectItem value="__none" disabled>Нет свободных слотов</SelectItem>
+                      <SelectItem value="__none" disabled>
+                        Нет свободных слотов
+                      </SelectItem>
                     )}
                     {availableSlotsForForm.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
@@ -173,7 +275,12 @@ export default function AdminDashboardPage() {
                 <label className="text-sm font-medium">Статус</label>
                 <Select
                   value={bookingForm.status}
-                  onValueChange={(v) => setBookingForm((f) => ({ ...f, status: v as typeof f.status }))}
+                  onValueChange={(v) =>
+                    setBookingForm((f) => ({
+                      ...f,
+                      status: v as typeof f.status,
+                    }))
+                  }
                   itemToStringLabel={(v) => STATUS_LABEL[v] ?? v}
                 >
                   <SelectTrigger className="w-full">
@@ -190,7 +297,12 @@ export default function AdminDashboardPage() {
 
             <DialogFooter>
               <Button
-                disabled={!bookingForm.userId || !bookingForm.serviceId || !bookingForm.slotId || createBooking.isPending}
+                disabled={
+                  !bookingForm.userId ||
+                  !bookingForm.serviceId ||
+                  !bookingForm.slotId ||
+                  createBooking.isPending
+                }
                 onClick={handleCreateBooking}
               >
                 {createBooking.isPending ? "Создание..." : "Создать"}
@@ -214,14 +326,20 @@ export default function AdminDashboardPage() {
           <TableBody>
             {bookingsLoading && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                <TableCell
+                  colSpan={5}
+                  className="text-center text-muted-foreground py-8"
+                >
                   Загрузка...
                 </TableCell>
               </TableRow>
             )}
             {!bookingsLoading && bookings.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                <TableCell
+                  colSpan={5}
+                  className="text-center text-muted-foreground py-8"
+                >
                   Бронирований нет
                 </TableCell>
               </TableRow>
@@ -231,7 +349,10 @@ export default function AdminDashboardPage() {
               const slot = booking.expand?.time_slot;
               const user = booking.expand?.user;
               const slotTaken = bookings.some(
-                (b) => b.id !== booking.id && b.time_slot === booking.time_slot && b.status !== "cancelled"
+                (b) =>
+                  b.id !== booking.id &&
+                  b.time_slot === booking.time_slot &&
+                  b.status !== "cancelled",
               );
               return (
                 <TableRow key={booking.id}>
@@ -244,26 +365,41 @@ export default function AdminDashboardPage() {
                   <TableCell>
                     {slot?.date ?? "—"}
                     <br />
-                    <span className="text-xs text-muted-foreground">{slot?.time ?? ""}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {slot?.time ?? ""}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant={
-                        booking.status === "paid" ? "default" :
-                        booking.status === "cancelled" ? "destructive" : "outline"
+                        booking.status === "paid"
+                          ? "default"
+                          : booking.status === "cancelled"
+                            ? "destructive"
+                            : "outline"
                       }
-                      className={booking.status === "paid" ? "bg-green-500 hover:bg-green-600" : ""}
+                      className={
+                        booking.status === "paid"
+                          ? "bg-green-500 hover:bg-green-600"
+                          : ""
+                      }
                     >
                       {STATUS_LABEL[booking.status] ?? booking.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
-                      <DropdownMenuTrigger render={
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      } />
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuGroup>
                           <DropdownMenuLabel>Действия</DropdownMenuLabel>
@@ -272,19 +408,33 @@ export default function AdminDashboardPage() {
                         {booking.status !== "paid" && (
                           <DropdownMenuItem
                             className="cursor-pointer"
-                            disabled={booking.status === "cancelled" && slotTaken}
-                            onClick={() => updateStatus.mutate({ id: booking.id, status: "paid" })}
+                            disabled={
+                              booking.status === "cancelled" && slotTaken
+                            }
+                            onClick={() =>
+                              updateStatus.mutate({
+                                id: booking.id,
+                                status: "paid",
+                              })
+                            }
                           >
                             Одобрить (paid)
                             {booking.status === "cancelled" && slotTaken && (
-                              <span className="ml-auto text-xs text-muted-foreground">слот занят</span>
+                              <span className="ml-auto text-xs text-muted-foreground">
+                                слот занят
+                              </span>
                             )}
                           </DropdownMenuItem>
                         )}
                         {booking.status !== "cancelled" && (
                           <DropdownMenuItem
                             className="cursor-pointer text-destructive"
-                            onClick={() => updateStatus.mutate({ id: booking.id, status: "cancelled" })}
+                            onClick={() =>
+                              updateStatus.mutate({
+                                id: booking.id,
+                                status: "cancelled",
+                              })
+                            }
                           >
                             Отменить бронь
                           </DropdownMenuItem>
@@ -307,28 +457,42 @@ export default function AdminDashboardPage() {
 
       <div className="mt-12">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-2 mb-4 gap-3">
-          <h2 className="text-xl font-bold tracking-tight">Управление доступностью (Слоты)</h2>
+          <h2 className="text-xl font-bold tracking-tight">
+            Управление доступностью (Слоты)
+          </h2>
           <Dialog open={slotOpen} onOpenChange={setSlotOpen}>
-            <DialogTrigger render={
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Добавить слот
-              </Button>
-            } />
+            <DialogTrigger
+              render={
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Добавить слот
+                </Button>
+              }
+            />
             <DialogContent className="sm:max-w-fit">
               <DialogHeader>
                 <DialogTitle>Новый слот</DialogTitle>
-                <DialogDescription>Выберите услугу, дату и время для нового слота</DialogDescription>
+                <DialogDescription>
+                  Выберите услугу, дату и время для нового слота
+                </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col items-center gap-4 py-2">
                 <div className="w-full px-1">
-                  <Select value={newServiceId ?? ""} onValueChange={setNewServiceId} itemToStringLabel={(v) => services.find((s) => s.id === v)?.name ?? v}>
+                  <Select
+                    value={newServiceId ?? ""}
+                    onValueChange={setNewServiceId}
+                    itemToStringLabel={(v) =>
+                      services.find((s) => s.id === v)?.name ?? v
+                    }
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Выберите услугу" />
                     </SelectTrigger>
                     <SelectContent>
                       {services.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -339,7 +503,9 @@ export default function AdminDashboardPage() {
                   selected={newDate}
                   onSelect={setNewDate}
                   className="[--cell-size:min(2.8rem,calc((100vw-5rem)/7))]"
-                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                  disabled={(date) =>
+                    date < new Date(new Date().setHours(0, 0, 0, 0))
+                  }
                 />
                 <div className="w-full px-1">
                   <Select value={newTime ?? ""} onValueChange={setNewTime}>
@@ -348,7 +514,9 @@ export default function AdminDashboardPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {TIME_OPTIONS.map((t) => (
-                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -357,7 +525,12 @@ export default function AdminDashboardPage() {
               <DialogFooter>
                 <Button
                   type="button"
-                  disabled={!newDate || !newTime || !newServiceId || createSlot.isPending}
+                  disabled={
+                    !newDate ||
+                    !newTime ||
+                    !newServiceId ||
+                    createSlot.isPending
+                  }
                   onClick={handleCreate}
                 >
                   {createSlot.isPending ? "Создание..." : "Создать"}
@@ -381,31 +554,44 @@ export default function AdminDashboardPage() {
             <TableBody>
               {slotsLoading && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell
+                    colSpan={5}
+                    className="text-center text-muted-foreground py-8"
+                  >
                     Загрузка...
                   </TableCell>
                 </TableRow>
               )}
               {!slotsLoading && slots.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell
+                    colSpan={5}
+                    className="text-center text-muted-foreground py-8"
+                  >
                     Слоты не найдены
                   </TableCell>
                 </TableRow>
               )}
               {slots.map((slot) => {
-                const slotBookings: { status: string }[] = slot.expand?.bookings_via_time_slot ?? [];
-              const isBooked = slotBookings.some((b) => b.status !== "cancelled");
+                const slotBookings: { status: string }[] =
+                  slot.expand?.bookings_via_time_slot ?? [];
+                const isBooked = slotBookings.some(
+                  (b) => b.status !== "cancelled",
+                );
                 const serviceName = slot.expand?.service?.name ?? "—";
                 return (
                   <TableRow key={slot.id}>
                     <TableCell className="font-medium">{slot.date}</TableCell>
                     <TableCell>{slot.time}</TableCell>
-                    <TableCell className="text-muted-foreground">{serviceName}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {serviceName}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant={isBooked ? "destructive" : "outline"}
-                        className={!isBooked ? "text-green-600 border-green-400" : ""}
+                        className={
+                          !isBooked ? "text-green-600 border-green-400" : ""
+                        }
                       >
                         {isBooked ? "Занят" : "Свободен"}
                       </Badge>
@@ -416,7 +602,11 @@ export default function AdminDashboardPage() {
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
                         disabled={isBooked || deleteSlot.isPending}
-                        title={isBooked ? "Нельзя удалить занятый слот" : "Удалить слот"}
+                        title={
+                          isBooked
+                            ? "Нельзя удалить занятый слот"
+                            : "Удалить слот"
+                        }
                         onClick={() => deleteSlot.mutate(slot.id)}
                       >
                         <Trash2 className="h-4 w-4" />

@@ -1,11 +1,20 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getServices, createService, updateService, deleteService } from "@/services/services";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Service } from "@/services/services";
+import {
+  createService,
+  deleteService,
+  getServices,
+  updateService,
+} from "@/services/services";
 
 export const servicesKey = ["services"] as const;
 
 export function useServices() {
-  return useQuery<Service[]>({ queryKey: servicesKey, queryFn: () => getServices(), retry: 1 });
+  return useQuery<Service[]>({
+    queryKey: servicesKey,
+    queryFn: () => getServices(),
+    retry: 1,
+  });
 }
 
 export function useCreateService() {
@@ -19,8 +28,13 @@ export function useCreateService() {
 export function useUpdateService() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Omit<Service, keyof import("pocketbase").RecordModel>> }) =>
-      updateService(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<Omit<Service, keyof import("pocketbase").RecordModel>>;
+    }) => updateService(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: servicesKey }),
   });
 }

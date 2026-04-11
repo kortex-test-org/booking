@@ -1,20 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import {
+  ArrowRight,
+  CalendarDays,
+  Clock,
+  Hourglass,
+  Loader2,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { TimeSlotPicker } from "@/components/organisms/time-slot-picker";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Clock, ArrowRight, Loader2, Hourglass } from "lucide-react";
-import { useServices } from "@/queries/services";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
+import { useServices } from "@/queries/services";
 import { pb } from "@/services/pb";
 
 export default function BookingServicePage() {
   const params = useParams();
   const router = useRouter();
-  const [selectedDateTime, setSelectedDateTime] = useState<{ date: Date; time: string; slotId: string } | null>(null);
+  const [selectedDateTime, setSelectedDateTime] = useState<{
+    date: Date;
+    time: string;
+    slotId: string;
+  } | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   const { data: services = [], isLoading: isServicesLoading } = useServices();
@@ -23,7 +39,8 @@ export default function BookingServicePage() {
 
   useEffect(() => {
     if (isInitialized && !isValid) {
-      const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+      const currentPath =
+        typeof window !== "undefined" ? window.location.pathname : "";
       router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
     }
   }, [isInitialized, isValid, router]);
@@ -37,14 +54,14 @@ export default function BookingServicePage() {
 
     try {
       setIsCheckoutLoading(true);
-      
+
       // PocketBase хранит токен в памяти/localStorage, а не в куки.
       // Передаём его явно в заголовке Authorization.
       const token = pb.authStore.token;
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
+      const response = await fetch("/api/checkout", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
@@ -56,15 +73,15 @@ export default function BookingServicePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Ошибка при создании платежа');
+        throw new Error(data.error || "Ошибка при создании платежа");
       }
 
       if (data.url) {
         window.location.href = data.url;
       }
     } catch (error) {
-      console.error('Checkout error:', error);
-      alert('Произошла ошибка при переходе к оплате. Попробуйте еще раз.');
+      console.error("Checkout error:", error);
+      alert("Произошла ошибка при переходе к оплате. Попробуйте еще раз.");
     } finally {
       setIsCheckoutLoading(false);
     }
@@ -81,9 +98,15 @@ export default function BookingServicePage() {
   if (!service) {
     return (
       <div className="container mx-auto px-4 md:px-8 py-24 text-center min-h-[50vh]">
-        <h1 className="text-3xl font-bold tracking-tight mb-4">Услуга не найдена</h1>
-        <p className="text-muted-foreground mb-8">Возможно, ссылка устарела или услуга была удалена.</p>
-        <Button onClick={() => router.push("/")} size="lg">На главную</Button>
+        <h1 className="text-3xl font-bold tracking-tight mb-4">
+          Услуга не найдена
+        </h1>
+        <p className="text-muted-foreground mb-8">
+          Возможно, ссылка устарела или услуга была удалена.
+        </p>
+        <Button onClick={() => router.push("/")} size="lg">
+          На главную
+        </Button>
       </div>
     );
   }
@@ -91,8 +114,12 @@ export default function BookingServicePage() {
   return (
     <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 max-w-5xl">
       <div className="mb-8">
-        <Badge variant="secondary" className="mb-4">Бронирование</Badge>
-        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">{service.name}</h1>
+        <Badge variant="secondary" className="mb-4">
+          Бронирование
+        </Badge>
+        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+          {service.name}
+        </h1>
         {service.description && (
           <p className="text-muted-foreground text-lg max-w-3xl">
             {service.description}
@@ -102,7 +129,10 @@ export default function BookingServicePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <TimeSlotPicker serviceId={params.serviceId as string} onSelectTime={handleTimeSelect} />
+          <TimeSlotPicker
+            serviceId={params.serviceId as string}
+            onSelectTime={handleTimeSelect}
+          />
         </div>
 
         <div className="lg:col-span-1">
@@ -116,19 +146,28 @@ export default function BookingServicePage() {
                 <div className="flex items-start gap-3">
                   <CalendarDays className="w-5 h-5 text-primary mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-sm text-muted-foreground">Дата</h4>
+                    <h4 className="font-medium text-sm text-muted-foreground">
+                      Дата
+                    </h4>
                     <p className="font-medium text-foreground">
-                      {selectedDateTime 
-                        ? selectedDateTime.date.toLocaleDateString("ru-RU", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) 
+                      {selectedDateTime
+                        ? selectedDateTime.date.toLocaleDateString("ru-RU", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
                         : "Не выбрана"}
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <Clock className="w-5 h-5 text-primary mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-sm text-muted-foreground">Время начала</h4>
+                    <h4 className="font-medium text-sm text-muted-foreground">
+                      Время начала
+                    </h4>
                     <p className="font-medium text-foreground">
                       {selectedDateTime ? selectedDateTime.time : "Не выбрано"}
                     </p>
@@ -138,7 +177,9 @@ export default function BookingServicePage() {
                 <div className="flex items-start gap-3">
                   <Hourglass className="w-5 h-5 text-primary mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-sm text-muted-foreground">Длительность</h4>
+                    <h4 className="font-medium text-sm text-muted-foreground">
+                      Длительность
+                    </h4>
                     <p className="font-medium text-foreground">
                       {service.duration_minutes} мин
                     </p>
@@ -151,8 +192,8 @@ export default function BookingServicePage() {
                   <span className="font-medium">Итого к оплате</span>
                   <span className="text-2xl font-bold">{service.price} €</span>
                 </div>
-                <Button 
-                  className="w-full text-base h-12 shadow-sm rounded-xl group" 
+                <Button
+                  className="w-full text-base h-12 shadow-sm rounded-xl group"
                   disabled={!selectedDateTime || isCheckoutLoading}
                   onClick={handleProceed}
                 >

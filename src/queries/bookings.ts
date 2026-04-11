@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  type Booking,
   createBooking,
   deleteBooking,
   getBookings,
   updateBookingStatus,
-  type Booking,
 } from "@/services/bookings";
 
 export const bookingsKey = ["bookings"] as const;

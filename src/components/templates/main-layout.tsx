@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Header } from "@/components/organisms/header";
 
 export function MainLayout({ children }: { children: ReactNode }) {
@@ -12,8 +12,12 @@ export function MainLayout({ children }: { children: ReactNode }) {
             © 2026 Prime. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-colors">Условия</a>
-            <a href="#" className="hover:text-foreground transition-colors">Политика конфиденциальности</a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              Условия
+            </a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              Политика конфиденциальности
+            </a>
           </div>
         </div>
       </footer>

@@ -1,14 +1,39 @@
 "use client";
 
+import { MoreHorizontal, Plus } from "lucide-react";
 import { useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Plus } from "lucide-react";
-import { useServices, useCreateService, useUpdateService, useDeleteService } from "@/queries/services";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  useCreateService,
+  useDeleteService,
+  useServices,
+  useUpdateService,
+} from "@/queries/services";
 import type { Service } from "@/services/services";
 
 type ServiceFormData = {
@@ -18,7 +43,12 @@ type ServiceFormData = {
   duration_minutes: string;
 };
 
-const EMPTY_FORM: ServiceFormData = { name: "", description: "", price: "", duration_minutes: "" };
+const EMPTY_FORM: ServiceFormData = {
+  name: "",
+  description: "",
+  price: "",
+  duration_minutes: "",
+};
 
 function serviceToForm(s: Service): ServiceFormData {
   return {
@@ -68,7 +98,7 @@ export default function AdminServicesPage() {
     if (!editTarget) return;
     updateService.mutate(
       { id: editTarget.id, data: formToData(form) },
-      { onSuccess: () => setEditTarget(null) }
+      { onSuccess: () => setEditTarget(null) },
     );
   }
 
@@ -78,21 +108,27 @@ export default function AdminServicesPage() {
     <div>
       <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Услуги</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
+            Услуги
+          </h1>
           <p className="text-muted-foreground">Управление списком услуг.</p>
         </div>
 
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger render={
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="h-4 w-4 mr-1" />
-              Добавить
-            </Button>
-          } />
+          <DialogTrigger
+            render={
+              <Button size="sm" onClick={openCreate}>
+                <Plus className="h-4 w-4 mr-1" />
+                Добавить
+              </Button>
+            }
+          />
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Новая услуга</DialogTitle>
-              <DialogDescription>Заполните данные для новой услуги</DialogDescription>
+              <DialogDescription>
+                Заполните данные для новой услуги
+              </DialogDescription>
             </DialogHeader>
             <ServiceForm form={form} onChange={setForm} />
             <DialogFooter>
@@ -121,12 +157,22 @@ export default function AdminServicesPage() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">Загрузка...</TableCell>
+                <TableCell
+                  colSpan={5}
+                  className="text-center text-muted-foreground py-8"
+                >
+                  Загрузка...
+                </TableCell>
               </TableRow>
             )}
             {!isLoading && services.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">Услуги не найдены</TableCell>
+                <TableCell
+                  colSpan={5}
+                  className="text-center text-muted-foreground py-8"
+                >
+                  Услуги не найдены
+                </TableCell>
               </TableRow>
             )}
             {services.map((service) => (
@@ -139,13 +185,18 @@ export default function AdminServicesPage() {
                 <TableCell>{service.duration_minutes}</TableCell>
                 <TableCell>
                   <DropdownMenu>
-                    <DropdownMenuTrigger render={
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    } />
+                    <DropdownMenuTrigger
+                      render={
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
                     <DropdownMenuContent align="end" className="w-36">
-                      <DropdownMenuItem className="cursor-pointer" onClick={() => openEdit(service)}>
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() => openEdit(service)}
+                      >
                         Редактировать
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -164,7 +215,10 @@ export default function AdminServicesPage() {
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
+      <Dialog
+        open={!!editTarget}
+        onOpenChange={(open) => !open && setEditTarget(null)}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Редактировать услугу</DialogTitle>

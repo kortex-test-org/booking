@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Calendar } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Clock } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { Clock } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent } from "@/components/ui/card";
 import { useTimeSlots } from "@/queries/time-slots";
 
 interface TimeSlotPickerProps {
@@ -14,7 +14,10 @@ interface TimeSlotPickerProps {
   onSelectTime: (date: Date, time: string, slotId: string) => void;
 }
 
-export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps) {
+export function TimeSlotPicker({
+  serviceId,
+  onSelectTime,
+}: TimeSlotPickerProps) {
   const [date, setDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -23,14 +26,15 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
   const availableSlots = useMemo(() => {
     return slots.filter((slot) => {
       if (slot.service !== serviceId) return false;
-      const slotBookings: { status: string }[] = slot.expand?.bookings_via_time_slot ?? [];
+      const slotBookings: { status: string }[] =
+        slot.expand?.bookings_via_time_slot ?? [];
       const isBooked = slotBookings.some((b) => b.status !== "cancelled");
       return !isBooked;
     });
   }, [slots, serviceId]);
 
   const availableDateStrings = useMemo(() => {
-    return new Set(availableSlots.map(s => s.date));
+    return new Set(availableSlots.map((s) => s.date));
   }, [availableSlots]);
 
   useEffect(() => {
@@ -39,14 +43,14 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
 
   useEffect(() => {
     if (mounted && !isLoading && !date && availableDateStrings.size > 0) {
-      const todayStr = format(new Date(), 'yyyy-MM-dd');
-      let targetDateStr = '';
-      
+      const todayStr = format(new Date(), "yyyy-MM-dd");
+      let targetDateStr = "";
+
       if (availableDateStrings.has(todayStr)) {
         targetDateStr = todayStr;
       } else {
         const sortedDates = Array.from(availableDateStrings).sort();
-        const futureDates = sortedDates.filter(d => d >= todayStr);
+        const futureDates = sortedDates.filter((d) => d >= todayStr);
         if (futureDates.length > 0) {
           targetDateStr = futureDates[0];
         } else if (sortedDates.length > 0) {
@@ -55,7 +59,7 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
       }
 
       if (targetDateStr) {
-        const [y, m, d] = targetDateStr.split('-');
+        const [y, m, d] = targetDateStr.split("-");
         setDate(new Date(Number(y), Number(m) - 1, Number(d)));
       }
     }
@@ -64,8 +68,10 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
   const handleTimeSelect = (time: string) => {
     setSelectedTime(time);
     if (date) {
-      const dateStr = format(date, 'yyyy-MM-dd');
-      const slot = availableSlots.find((s) => s.date === dateStr && s.time === time);
+      const dateStr = format(date, "yyyy-MM-dd");
+      const slot = availableSlots.find(
+        (s) => s.date === dateStr && s.time === time,
+      );
       if (slot) {
         onSelectTime(date, time, slot.id);
       }
@@ -74,7 +80,7 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
 
   const availableTimes = useMemo(() => {
     if (!date) return [];
-    const dateStr = format(date, 'yyyy-MM-dd');
+    const dateStr = format(date, "yyyy-MM-dd");
     return availableSlots
       .filter((s) => s.date === dateStr)
       .map((s) => s.time)
@@ -110,18 +116,19 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
               setSelectedTime(null);
             }}
             disabled={(d) => {
-              const dStr = format(d, 'yyyy-MM-dd');
+              const dStr = format(d, "yyyy-MM-dd");
               return !availableDateStrings.has(dStr);
             }}
             className="p-4"
             classNames={{
               day_today: "bg-muted text-muted-foreground",
-              day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+              day_selected:
+                "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
             }}
           />
         </CardContent>
       </Card>
-      
+
       <div className="flex-1">
         <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
           <Clock className="w-5 h-5 text-primary" />
@@ -129,7 +136,9 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
         </h3>
         {availableDateStrings.size === 0 ? (
           <div className="py-12 text-center border rounded-xl border-dashed bg-destructive/10 border-destructive/20 text-destructive">
-            <p className="font-medium">К сожалению, на ближайшее время нет свободных мест для записи.</p>
+            <p className="font-medium">
+              К сожалению, на ближайшее время нет свободных мест для записи.
+            </p>
           </div>
         ) : date ? (
           <div className="flex flex-wrap gap-3">
@@ -139,8 +148,8 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
                   key={time}
                   variant={selectedTime === time ? "default" : "outline"}
                   className={`min-w-[90px] h-10 px-4 transition-all ${
-                    selectedTime === time 
-                      ? "shadow-md scale-105" 
+                    selectedTime === time
+                      ? "shadow-md scale-105"
                       : "hover:border-primary/50 hover:bg-primary/5"
                   }`}
                   onClick={() => handleTimeSelect(time)}
@@ -156,7 +165,9 @@ export function TimeSlotPicker({ serviceId, onSelectTime }: TimeSlotPickerProps)
           </div>
         ) : (
           <div className="py-12 text-center border rounded-xl border-dashed bg-muted/20">
-            <p className="text-muted-foreground">Пожалуйста, выберите дату слева</p>
+            <p className="text-muted-foreground">
+              Пожалуйста, выберите дату слева
+            </p>
           </div>
         )}
       </div>

@@ -1,7 +1,13 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, CalendarDays, Clock, CreditCard, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Clock, CreditCard, ArrowRight, X } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export type BookingStatus = "pending" | "paid" | "cancelled";
 
@@ -17,13 +23,29 @@ export interface BookingCardProps {
   cancelLoading?: boolean;
 }
 
-const statusConfig: Record<BookingStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const statusConfig: Record<
+  BookingStatus,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
   pending: { label: "Ожидает оплаты", variant: "outline" },
   paid: { label: "Оплачено", variant: "default" },
   cancelled: { label: "Отменено", variant: "destructive" },
 };
 
-export function BookingCard({ id, serviceName, date, time, status, price, onPay, onCancel, cancelLoading }: BookingCardProps) {
+export function BookingCard({
+  id,
+  serviceName,
+  date,
+  time,
+  status,
+  price,
+  onPay,
+  onCancel,
+  cancelLoading,
+}: BookingCardProps) {
   const config = statusConfig[status];
 
   return (
@@ -31,10 +53,17 @@ export function BookingCard({ id, serviceName, date, time, status, price, onPay,
       <CardHeader className="bg-muted/30 pt-5 pb-4">
         <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-3 sm:gap-4">
           <div className="flex-1">
-            <div className="text-xs text-muted-foreground mb-1 font-mono">{id}</div>
-            <CardTitle className="text-lg leading-tight">{serviceName}</CardTitle>
+            <div className="text-xs text-muted-foreground mb-1 font-mono">
+              {id}
+            </div>
+            <CardTitle className="text-lg leading-tight">
+              {serviceName}
+            </CardTitle>
           </div>
-          <Badge variant={config.variant} className={`shrink-0 self-start ${status === "paid" ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}>
+          <Badge
+            variant={config.variant}
+            className={`shrink-0 self-start ${status === "paid" ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}
+          >
             {config.label}
           </Badge>
         </div>

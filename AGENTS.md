@@ -1,5 +1,13 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# AGENTS.md
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+@.agents/rules/project.md
+@.agents/rules/general/code-style.md
+@.agents/rules/general/git.md
+@.agents/rules/general/security.md
+@.agents/rules/general/testing.md
+@.agents/rules/general/tooling.md
+@.agents/rules/general/scaffolding.md
+@.agents/rules/general/workflow.md
+@.agents/rules/frontend/react-components.md
+@.agents/rules/frontend/react-state.md
+@.agents/rules/frontend/nextjs.md
