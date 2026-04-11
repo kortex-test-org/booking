@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const { data: slotsList = [], isLoading: isSlotsLoading } =
     useTimeSlotsBasic();
   const updateStatus = useUpdateBookingStatus();
+  const { mutate: cancelBooking } = updateStatus;
 
   const services = new Map(
     servicesList.map((service) => [service.id, service]),
@@ -54,11 +55,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (cancelledParam === "1" && bookingIdParam) {
-      pb.collection("bookings")
-        .delete(bookingIdParam)
-        .catch(() => {});
+      cancelBooking({ id: bookingIdParam, status: BOOKING_STATUS.CANCELLED });
     }
-  }, [cancelledParam, bookingIdParam]);
+  }, [cancelledParam, bookingIdParam, cancelBooking]);
 
   async function handlePay(booking: Booking) {
     setPayingId(booking.id);

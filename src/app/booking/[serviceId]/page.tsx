@@ -20,6 +20,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
+import { BOOKING_STATUS } from "@/lib/constants";
+import { useUpdateBookingStatus } from "@/queries/bookings";
 import { useServices } from "@/queries/services";
 import { useTimeSlots } from "@/queries/time-slots";
 import { pb } from "@/services/pb";
@@ -42,17 +44,16 @@ export default function BookingServicePage() {
   const service = services.find((s) => s.id === serviceId);
   const { isValid, isInitialized } = useAuth();
   const searchParams = useSearchParams();
+  const { mutate: cancelBooking } = useUpdateBookingStatus();
 
   const cancelledParam = searchParams.get("cancelled");
   const bookingIdParam = searchParams.get("bookingId");
 
   useEffect(() => {
     if (cancelledParam === "1" && bookingIdParam) {
-      pb.collection("bookings")
-        .delete(bookingIdParam)
-        .catch(() => {});
+      cancelBooking({ id: bookingIdParam, status: BOOKING_STATUS.CANCELLED });
     }
-  }, [cancelledParam, bookingIdParam]);
+  }, [cancelledParam, bookingIdParam, cancelBooking]);
 
   useEffect(() => {
     if (isInitialized && !isValid) {
