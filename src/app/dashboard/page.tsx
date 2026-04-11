@@ -1,10 +1,11 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BookingCard } from "@/components/molecules/booking-card";
 import { useAuth } from "@/lib/auth-context";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BOOKING_STATUS } from "@/lib/constants";
 import { useUpdateBookingStatus, useUserBookings } from "@/queries/bookings";
 import { useServices } from "@/queries/services";
@@ -27,6 +28,33 @@ function formatTime(startTime: string, durationMinutes: number): string {
   const end = new Date(0, 0, 0, hours, minutes + durationMinutes);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${pad(start.getHours())}:${pad(start.getMinutes())} - ${pad(end.getHours())}:${pad(end.getMinutes())}`;
+}
+
+function BookingCardSkeleton() {
+  return (
+    <Card className="overflow-hidden border-muted h-full flex flex-col p-0 gap-0">
+      <CardHeader className="bg-muted/30 pt-5 pb-4">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-3 sm:gap-4">
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-5 w-48" />
+          </div>
+          <Skeleton className="h-5 w-24 shrink-0 rounded-full" />
+        </div>
+      </CardHeader>
+      <CardContent className="pt-5 pb-4 flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4">
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+      </CardContent>
+      <CardFooter className="py-4 px-6 flex gap-2">
+        <Skeleton className="h-9 flex-1 rounded-md" />
+        <Skeleton className="h-9 w-24 rounded-md" />
+      </CardFooter>
+    </Card>
+  );
 }
 
 export default function DashboardPage() {
@@ -97,13 +125,7 @@ export default function DashboardPage() {
     setCancellingId(null);
   }
 
-  if (!isInitialized || !isValid) {
-    return (
-      <div className="py-20 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  const showSkeleton = !isInitialized || loading;
 
   return (
     <div>
@@ -116,12 +138,14 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {loading ? (
-        <div className="py-20 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      {showSkeleton ? (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <BookingCardSkeleton key={index} />
+          ))}
         </div>
       ) : bookings.length > 0 ? (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 animate-in fade-in duration-300">
           {bookings.map((booking) => {
             const service = services.get(booking.service);
             const slot = timeSlots.get(booking.time_slot);
