@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheck, Menu, Scissors, X } from "lucide-react";
+import { BarChart2, CalendarCheck, Menu, Scissors, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/admin", label: "Бронирования", icon: CalendarCheck, exact: true },
   { href: "/admin/services", label: "Услуги", icon: Scissors, exact: false },
+  { href: "/admin/statistics", label: "Статистика", icon: BarChart2, exact: false },
 ];
 
 interface NavLinksProps {
