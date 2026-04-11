@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { BookingCard } from "@/components/molecules/booking-card";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -57,7 +57,7 @@ function BookingCardSkeleton() {
   );
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { isValid, isInitialized } = useAuth();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [payingId, setPayingId] = useState<string | null>(null);
@@ -179,5 +179,13 @@ export default function DashboardPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense>
+      <DashboardContent />
+    </Suspense>
   );
 }
