@@ -2,6 +2,7 @@
 
 import { LogOut } from "lucide-react";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth-context";
@@ -49,6 +50,7 @@ export function Header() {
           )}
         </div>
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           {!isInitialized ? (
             <>
               <Skeleton className="hidden sm:block h-9 w-16 rounded-md" />
