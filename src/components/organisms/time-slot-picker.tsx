@@ -7,28 +7,34 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
-import { useTimeSlots } from "@/queries/time-slots";
+import { BOOKING_STATUS } from "@/lib/constants";
+import type { TimeSlot } from "@/services/time-slots";
 
 interface TimeSlotPickerProps {
   serviceId: string;
+  slots: TimeSlot[];
+  isLoading: boolean;
   onSelectTime: (date: Date, time: string, slotId: string) => void;
 }
 
 export function TimeSlotPicker({
   serviceId,
+  slots,
+  isLoading,
   onSelectTime,
 }: TimeSlotPickerProps) {
   const [date, setDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const { data: slots = [], isLoading } = useTimeSlots();
 
   const availableSlots = useMemo(() => {
     return slots.filter((slot) => {
       if (slot.service !== serviceId) return false;
       const slotBookings: { status: string }[] =
         slot.expand?.bookings_via_time_slot ?? [];
-      const isBooked = slotBookings.some((b) => b.status !== "cancelled");
+      const isBooked = slotBookings.some(
+        (b) => b.status !== BOOKING_STATUS.CANCELLED,
+      );
       return !isBooked;
     });
   }, [slots, serviceId]);

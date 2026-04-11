@@ -1,28 +1,35 @@
 import { format } from "date-fns";
 import { ServiceCard } from "@/components/molecules/service-card";
 import { MainLayout } from "@/components/templates/main-layout";
-import { getServices } from "@/services/services";
+import { BOOKING_STATUS } from "@/lib/constants";
+import { getServices, type Service } from "@/services/services";
 import { getTimeSlotsServer } from "@/services/time-slots";
+
+interface BookingExpand {
+  status: string;
+}
+
+type ServiceWithAvailability = Service & { hasAvailableSlots: boolean };
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  let services: any[] = [];
-  let availableServices: any[] = [];
+  let availableServices: ServiceWithAvailability[] = [];
   try {
-    services = await getServices();
+    const services = await getServices();
     const slots = await getTimeSlotsServer();
 
-    // Вычисляем доступность для каждой услуги
     const todayStr = format(new Date(), "yyyy-MM-dd");
     availableServices = services.map((service) => {
       const serviceSlots = slots.filter(
         (s) => s.service === service.id && s.date >= todayStr,
       );
       const hasAvailableSlots = serviceSlots.some((slot) => {
-        const bookings = slot.expand?.bookings_via_time_slot || [];
-        // Слот доступен, если нет ни одной активной брони (статус не cancelled)
-        return !bookings.some((b: any) => b.status !== "cancelled");
+        const bookings: BookingExpand[] =
+          slot.expand?.bookings_via_time_slot ?? [];
+        return !bookings.some(
+          (booking) => booking.status !== BOOKING_STATUS.CANCELLED,
+        );
       });
       return { ...service, hasAvailableSlots };
     });

@@ -69,8 +69,7 @@ export function Header() {
               <span className="hidden sm:inline text-xs text-muted-foreground font-medium">
                 {isSuperuser
                   ? "Администратор"
-                  : ((record as { name?: string; email?: string } | null)
-                      ?.name ?? (record as { email?: string } | null)?.email)}
+                  : (record?.name ?? record?.email)}
               </span>
               <Button
                 variant="ghost"

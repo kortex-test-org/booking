@@ -1,21 +1,16 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  BookingCard,
-  type BookingStatus,
-} from "@/components/molecules/booking-card";
+import { useEffect, useState } from "react";
+import { BookingCard } from "@/components/molecules/booking-card";
 import { useAuth } from "@/lib/auth-context";
-import {
-  type Booking,
-  getUserBookings,
-  updateBookingStatus,
-} from "@/services/bookings";
+import { BOOKING_STATUS } from "@/lib/constants";
+import { useUpdateBookingStatus, useUserBookings } from "@/queries/bookings";
+import { useServices } from "@/queries/services";
+import { useTimeSlotsBasic } from "@/queries/time-slots";
+import type { Booking } from "@/services/bookings";
 import { pb } from "@/services/pb";
-import { getServices, type Service } from "@/services/services";
-import { getTimeSlotsBasic, type TimeSlot } from "@/services/time-slots";
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -35,28 +30,35 @@ function formatTime(startTime: string, durationMinutes: number): string {
 }
 
 export default function DashboardPage() {
-  const { record, isValid, isInitialized } = useAuth();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [services, setServices] = useState<Map<string, Service>>(new Map());
-  const [timeSlots, setTimeSlots] = useState<Map<string, TimeSlot>>(new Map());
-  const [loading, setLoading] = useState(true);
+  const { isValid, isInitialized } = useAuth();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [payingId, setPayingId] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
-  // Удаляем pending-запись если пользователь отменил оплату через Stripe
+  const { data: bookings = [], isLoading: isBookingsLoading } =
+    useUserBookings();
+  const { data: servicesList = [], isLoading: isServicesLoading } =
+    useServices();
+  const { data: slotsList = [], isLoading: isSlotsLoading } =
+    useTimeSlotsBasic();
+  const updateStatus = useUpdateBookingStatus();
+
+  const services = new Map(
+    servicesList.map((service) => [service.id, service]),
+  );
+  const timeSlots = new Map(slotsList.map((slot) => [slot.id, slot]));
+  const loading = isBookingsLoading || isServicesLoading || isSlotsLoading;
+
+  const cancelledParam = searchParams.get("cancelled");
+  const bookingIdParam = searchParams.get("bookingId");
+
   useEffect(() => {
-    const cancelled = searchParams.get("cancelled");
-    const bookingId = searchParams.get("bookingId");
-    if (cancelled === "1" && bookingId) {
+    if (cancelledParam === "1" && bookingIdParam) {
       pb.collection("bookings")
-        .delete(bookingId)
-        .catch(() => {
-          // запись уже удалена или не нашлась
-        });
+        .delete(bookingIdParam)
+        .catch(() => {});
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cancelledParam, bookingIdParam]);
 
   async function handlePay(booking: Booking) {
     setPayingId(booking.id);
@@ -88,47 +90,13 @@ export default function DashboardPage() {
 
   async function handleCancel(bookingId: string) {
     setCancellingId(bookingId);
-    try {
-      await updateBookingStatus(bookingId, "cancelled");
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.id === bookingId ? { ...b, status: "cancelled" } : b,
-        ),
-      );
-    } catch (err) {
-      console.error("Cancel error:", err);
-    } finally {
-      setCancellingId(null);
-    }
-  }
-
-  useEffect(() => {
-    if (!isInitialized || !isValid || !record?.id) return;
-
-    let cancelled = false;
-
-    Promise.all([
-      getUserBookings(),
-      getServices({ requestKey: null }),
-      getTimeSlotsBasic(),
-    ])
-      .then(([bookingsList, servicesList, slotsList]) => {
-        if (cancelled) return;
-        setBookings(bookingsList);
-        setServices(new Map(servicesList.map((s) => [s.id, s])));
-        setTimeSlots(new Map(slotsList.map((s) => [s.id, s])));
-      })
+    await updateStatus
+      .mutateAsync({ id: bookingId, status: BOOKING_STATUS.CANCELLED })
       .catch((err) => {
-        if (!cancelled) console.error("Dashboard fetch error:", err);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        console.error("Cancel error:", err);
       });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isInitialized, isValid, record?.id]);
+    setCancellingId(null);
+  }
 
   if (!isInitialized || !isValid) {
     return (
@@ -170,7 +138,7 @@ export default function DashboardPage() {
                     ? formatTime(slot.time, service.duration_minutes)
                     : (slot?.time ?? "—")
                 }
-                status={booking.status as BookingStatus}
+                status={booking.status}
                 price={service?.price ?? 0}
                 onPay={() => handlePay(booking)}
                 payLoading={payingId === booking.id}

@@ -1,19 +1,21 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+interface AuthLayoutProps {
+  children: ReactNode;
+  title: string;
+  subtitle?: string;
+  linkText: string;
+  linkHref: string;
+}
+
 export function AuthLayout({
   children,
   title,
   subtitle,
   linkText,
   linkHref,
-}: {
-  children: ReactNode;
-  title: string;
-  subtitle?: string;
-  linkText: string;
-  linkHref: string;
-}) {
+}: AuthLayoutProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
       {/* Декоративный фон */}

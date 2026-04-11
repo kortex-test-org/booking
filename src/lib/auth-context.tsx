@@ -1,40 +1,13 @@
 "use client";
 
-import type { AuthRecord } from "pocketbase";
-import {
-  createContext,
-  type ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { useEffect } from "react";
 import { pb } from "@/services/pb";
-
-interface AuthState {
-  record: AuthRecord | null;
-  isValid: boolean;
-  isSuperuser: boolean;
-  isInitialized: boolean;
-}
-
-const AuthContext = createContext<AuthState>({
-  record: null,
-  isValid: false,
-  isSuperuser: false,
-  isInitialized: false,
-});
+import { useAuthStore } from "./auth-store";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({
-    record: null,
-    isValid: false,
-    isSuperuser: false,
-    isInitialized: false,
-  });
-
   useEffect(() => {
-    // Синхронизируем начальное состояние на клиенте
-    setState({
+    useAuthStore.setState({
       record: pb.authStore.record,
       isValid: pb.authStore.isValid,
       isSuperuser: pb.authStore.isSuperuser,
@@ -42,19 +15,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const unsubscribe = pb.authStore.onChange(() => {
-      setState({
+      useAuthStore.setState({
         record: pb.authStore.record,
         isValid: pb.authStore.isValid,
         isSuperuser: pb.authStore.isSuperuser,
         isInitialized: true,
       });
     });
+
     return unsubscribe;
   }, []);
 
-  return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
+  return <>{children}</>;
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  return useAuthStore();
 }

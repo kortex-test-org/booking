@@ -1,9 +1,11 @@
-import { CalendarCheck, LogOut, Settings, User } from "lucide-react";
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { Header } from "@/components/organisms/header";
 
-export function DashboardLayout({ children }: { children: ReactNode }) {
+interface DashboardLayoutProps {
+  children: ReactNode;
+}
+
+export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col bg-muted/20">
       <Header />

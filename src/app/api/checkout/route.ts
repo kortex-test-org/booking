@@ -2,12 +2,26 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import PocketBase from "pocketbase";
 import Stripe from "stripe";
+import { BOOKING_STATUS } from "@/lib/constants";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error("Missing STRIPE_SECRET_KEY environment variable");
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+interface SlotBooking {
+  id: string;
+  status: string;
+}
 
 export async function POST(req: Request) {
   try {
-    const { serviceId, timeSlotId, bookingId: existingBookingId, cancelUrl } = await req.json();
+    const {
+      serviceId,
+      timeSlotId,
+      bookingId: existingBookingId,
+      cancelUrl,
+    } = await req.json();
 
     if (!serviceId || !timeSlotId) {
       return NextResponse.json(
@@ -81,10 +95,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // Проверяем, не занят ли слот (исключая текущую pending-запись, если переоплачиваем)
-    const slotBookings = slot.expand?.bookings_via_time_slot || [];
+    const slotBookings: SlotBooking[] =
+      slot.expand?.bookings_via_time_slot ?? [];
     const isBooked = slotBookings.some(
-      (b: any) => b.status !== "cancelled" && b.id !== existingBookingId,
+      (booking) =>
+        booking.status !== "cancelled" && booking.id !== existingBookingId,
     );
 
     if (isBooked) {
@@ -94,13 +109,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // Удаляем отменённые записи для этого слота перед созданием новой
     const cancelledBookings = slotBookings.filter(
-      (b: any) => b.status === "cancelled",
+      (booking) => booking.status === "cancelled",
     );
     if (cancelledBookings.length > 0) {
       await Promise.allSettled(
-        cancelledBookings.map((b: any) => pb.collection("bookings").delete(b.id)),
+        cancelledBookings.map((booking) =>
+          pb.collection("bookings").delete(booking.id),
+        ),
       );
     }
 
@@ -116,7 +132,7 @@ export async function POST(req: Request) {
           user: userId,
           service: serviceId,
           time_slot: timeSlotId,
-          status: "pending",
+          status: BOOKING_STATUS.PENDING,
         });
 
     // Создаем Stripe Checkout Session
@@ -151,11 +167,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Checkout API error:", error);
-    return NextResponse.json(
-      { error: error.message || "Внутренняя ошибка сервера" },
-      { status: 500 },
-    );
+    const message =
+      error instanceof Error ? error.message : "Внутренняя ошибка сервера";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

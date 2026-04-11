@@ -40,6 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { BOOKING_STATUS } from "@/lib/constants";
 import {
   useBookings,
   useCreateBooking,
@@ -79,16 +80,16 @@ const TIME_OPTIONS = [
 ];
 
 const STATUS_LABEL: Record<string, string> = {
-  paid: "Оплачено",
-  pending: "Ожидает",
-  cancelled: "Отменено",
+  [BOOKING_STATUS.PAID]: "Оплачено",
+  [BOOKING_STATUS.PENDING]: "Ожидает",
+  [BOOKING_STATUS.CANCELLED]: "Отменено",
 };
 
 const EMPTY_BOOKING_FORM = {
   userId: "",
   serviceId: "",
   slotId: "",
-  status: "pending" as const,
+  status: BOOKING_STATUS.PENDING,
 };
 
 export default function AdminDashboardPage() {
@@ -115,7 +116,7 @@ export default function AdminDashboardPage() {
       return false;
     const slotBookings: { status: string }[] =
       s.expand?.bookings_via_time_slot ?? [];
-    return !slotBookings.some((b) => b.status !== "cancelled");
+    return !slotBookings.some((b) => b.status !== BOOKING_STATUS.CANCELLED);
   });
 
   function handleCreateBooking() {
@@ -287,9 +288,15 @@ export default function AdminDashboardPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">Ожидает</SelectItem>
-                    <SelectItem value="paid">Оплачено</SelectItem>
-                    <SelectItem value="cancelled">Отменено</SelectItem>
+                    <SelectItem value={BOOKING_STATUS.PENDING}>
+                      Ожидает
+                    </SelectItem>
+                    <SelectItem value={BOOKING_STATUS.PAID}>
+                      Оплачено
+                    </SelectItem>
+                    <SelectItem value={BOOKING_STATUS.CANCELLED}>
+                      Отменено
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -352,7 +359,7 @@ export default function AdminDashboardPage() {
                 (b) =>
                   b.id !== booking.id &&
                   b.time_slot === booking.time_slot &&
-                  b.status !== "cancelled",
+                  b.status !== BOOKING_STATUS.CANCELLED,
               );
               return (
                 <TableRow key={booking.id}>
@@ -372,14 +379,14 @@ export default function AdminDashboardPage() {
                   <TableCell>
                     <Badge
                       variant={
-                        booking.status === "paid"
+                        booking.status === BOOKING_STATUS.PAID
                           ? "default"
-                          : booking.status === "cancelled"
+                          : booking.status === BOOKING_STATUS.CANCELLED
                             ? "destructive"
                             : "outline"
                       }
                       className={
-                        booking.status === "paid"
+                        booking.status === BOOKING_STATUS.PAID
                           ? "bg-green-500 hover:bg-green-600"
                           : ""
                       }
@@ -405,34 +412,36 @@ export default function AdminDashboardPage() {
                           <DropdownMenuLabel>Действия</DropdownMenuLabel>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        {booking.status !== "paid" && (
+                        {booking.status !== BOOKING_STATUS.PAID && (
                           <DropdownMenuItem
                             className="cursor-pointer"
                             disabled={
-                              booking.status === "cancelled" && slotTaken
+                              booking.status === BOOKING_STATUS.CANCELLED &&
+                              slotTaken
                             }
                             onClick={() =>
                               updateStatus.mutate({
                                 id: booking.id,
-                                status: "paid",
+                                status: BOOKING_STATUS.PAID,
                               })
                             }
                           >
                             Одобрить (paid)
-                            {booking.status === "cancelled" && slotTaken && (
-                              <span className="ml-auto text-xs text-muted-foreground">
-                                слот занят
-                              </span>
-                            )}
+                            {booking.status === BOOKING_STATUS.CANCELLED &&
+                              slotTaken && (
+                                <span className="ml-auto text-xs text-muted-foreground">
+                                  слот занят
+                                </span>
+                              )}
                           </DropdownMenuItem>
                         )}
-                        {booking.status !== "cancelled" && (
+                        {booking.status !== BOOKING_STATUS.CANCELLED && (
                           <DropdownMenuItem
                             className="cursor-pointer text-destructive"
                             onClick={() =>
                               updateStatus.mutate({
                                 id: booking.id,
-                                status: "cancelled",
+                                status: BOOKING_STATUS.CANCELLED,
                               })
                             }
                           >
@@ -576,7 +585,7 @@ export default function AdminDashboardPage() {
                 const slotBookings: { status: string }[] =
                   slot.expand?.bookings_via_time_slot ?? [];
                 const isBooked = slotBookings.some(
-                  (b) => b.status !== "cancelled",
+                  (b) => b.status !== BOOKING_STATUS.CANCELLED,
                 );
                 const serviceName = slot.expand?.service?.name ?? "—";
                 return (

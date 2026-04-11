@@ -1,4 +1,11 @@
-import { ArrowRight, CalendarDays, Clock, CreditCard, Loader2, X } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  Clock,
+  CreditCard,
+  Loader2,
+  X,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,8 +15,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { BOOKING_STATUS, type BookingStatus } from "@/lib/constants";
 
-export type BookingStatus = "pending" | "paid" | "cancelled";
+export type { BookingStatus };
 
 export interface BookingCardProps {
   id: string;
@@ -31,9 +39,9 @@ const statusConfig: Record<
     variant: "default" | "secondary" | "destructive" | "outline";
   }
 > = {
-  pending: { label: "Ожидает оплаты", variant: "outline" },
-  paid: { label: "Оплачено", variant: "default" },
-  cancelled: { label: "Отменено", variant: "destructive" },
+  [BOOKING_STATUS.PENDING]: { label: "Ожидает оплаты", variant: "outline" },
+  [BOOKING_STATUS.PAID]: { label: "Оплачено", variant: "default" },
+  [BOOKING_STATUS.CANCELLED]: { label: "Отменено", variant: "destructive" },
 };
 
 export function BookingCard({
@@ -64,7 +72,7 @@ export function BookingCard({
           </div>
           <Badge
             variant={config.variant}
-            className={`shrink-0 self-start ${status === "paid" ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}
+            className={`shrink-0 self-start ${status === BOOKING_STATUS.PAID ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}
           >
             {config.label}
           </Badge>
@@ -86,9 +94,13 @@ export function BookingCard({
           </div>
         </div>
       </CardContent>
-      {status === "pending" && (
+      {status === BOOKING_STATUS.PENDING && (
         <CardFooter className="py-4 px-6 flex gap-2">
-          <Button className="flex-1 group/btn" onClick={onPay} disabled={payLoading}>
+          <Button
+            className="flex-1 group/btn"
+            onClick={onPay}
+            disabled={payLoading}
+          >
             {payLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

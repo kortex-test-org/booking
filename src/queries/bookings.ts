@@ -4,13 +4,23 @@ import {
   createBooking,
   deleteBooking,
   getBookings,
+  getUserBookings,
   updateBookingStatus,
 } from "@/services/bookings";
 
 export const bookingsKey = ["bookings"] as const;
+export const userBookingsKey = ["user-bookings"] as const;
 
 export function useBookings() {
   return useQuery({ queryKey: bookingsKey, queryFn: getBookings, retry: 1 });
+}
+
+export function useUserBookings() {
+  return useQuery({
+    queryKey: userBookingsKey,
+    queryFn: getUserBookings,
+    retry: 1,
+  });
 }
 
 export function useUpdateBookingStatus() {
@@ -20,6 +30,7 @@ export function useUpdateBookingStatus() {
       updateBookingStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: bookingsKey });
+      queryClient.invalidateQueries({ queryKey: userBookingsKey });
       queryClient.invalidateQueries({ queryKey: ["time_slots"] });
     },
   });

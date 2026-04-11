@@ -21,11 +21,15 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
 import { useServices } from "@/queries/services";
+import { useTimeSlots } from "@/queries/time-slots";
 import { pb } from "@/services/pb";
 
 export default function BookingServicePage() {
   const params = useParams();
   const router = useRouter();
+  const serviceId = Array.isArray(params.serviceId)
+    ? params.serviceId[0]
+    : (params.serviceId ?? "");
   const [selectedDateTime, setSelectedDateTime] = useState<{
     date: Date;
     time: string;
@@ -34,23 +38,21 @@ export default function BookingServicePage() {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   const { data: services = [], isLoading: isServicesLoading } = useServices();
-  const service = services.find((s) => s.id === params.serviceId);
+  const { data: slots = [], isLoading: isSlotsLoading } = useTimeSlots();
+  const service = services.find((s) => s.id === serviceId);
   const { isValid, isInitialized } = useAuth();
   const searchParams = useSearchParams();
 
-  // Отменяем pending-бронирование, если пользователь вернулся с страницы Stripe
+  const cancelledParam = searchParams.get("cancelled");
+  const bookingIdParam = searchParams.get("bookingId");
+
   useEffect(() => {
-    const cancelled = searchParams.get("cancelled");
-    const bookingId = searchParams.get("bookingId");
-    if (cancelled === "1" && bookingId) {
+    if (cancelledParam === "1" && bookingIdParam) {
       pb.collection("bookings")
-        .delete(bookingId)
-        .catch(() => {
-          // запись уже обработана или не нашлась
-        });
+        .delete(bookingIdParam)
+        .catch(() => {});
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cancelledParam, bookingIdParam]);
 
   useEffect(() => {
     if (isInitialized && !isValid) {
@@ -80,7 +82,7 @@ export default function BookingServicePage() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          serviceId: params.serviceId,
+          serviceId: serviceId,
           timeSlotId: selectedDateTime.slotId,
         }),
       });
@@ -102,7 +104,12 @@ export default function BookingServicePage() {
     }
   };
 
-  if (!isInitialized || (isInitialized && !isValid) || isServicesLoading) {
+  if (
+    !isInitialized ||
+    (isInitialized && !isValid) ||
+    isServicesLoading ||
+    isSlotsLoading
+  ) {
     return (
       <div className="container mx-auto px-4 md:px-8 py-24 flex justify-center items-center min-h-[50vh]">
         <Loader2 className="w-10 h-10 animate-spin text-primary/50" />
@@ -145,7 +152,9 @@ export default function BookingServicePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <TimeSlotPicker
-            serviceId={params.serviceId as string}
+            serviceId={serviceId}
+            slots={slots}
+            isLoading={isSlotsLoading}
             onSelectTime={handleTimeSelect}
           />
         </div>

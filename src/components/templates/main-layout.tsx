@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { Header } from "@/components/organisms/header";
 
-export function MainLayout({ children }: { children: ReactNode }) {
+interface MainLayoutProps {
+  children: ReactNode;
+}
+
+export function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="relative flex min-h-screen flex-col bg-background selection:bg-primary/20">
       <Header />
