@@ -26,6 +26,7 @@ export interface BookingCardProps {
   time: string;
   status: BookingStatus;
   price: number;
+  isExpired?: boolean;
   onPay?: () => void;
   onCancel?: () => void;
   payLoading?: boolean;
@@ -51,6 +52,7 @@ export function BookingCard({
   time,
   status,
   price,
+  isExpired = false,
   onPay,
   onCancel,
   payLoading,
@@ -70,12 +72,19 @@ export function BookingCard({
               {serviceName}
             </CardTitle>
           </div>
-          <Badge
-            variant={config.variant}
-            className={`shrink-0 self-start ${status === BOOKING_STATUS.PAID ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}
-          >
-            {config.label}
-          </Badge>
+          <div className="flex flex-wrap gap-2 shrink-0 self-start">
+            {isExpired && (
+              <Badge variant="secondary" className="text-muted-foreground">
+                Истёк
+              </Badge>
+            )}
+            <Badge
+              variant={config.variant}
+              className={`${status === BOOKING_STATUS.PAID ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}
+            >
+              {config.label}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-5 pb-4 flex-1">
@@ -94,7 +103,7 @@ export function BookingCard({
           </div>
         </div>
       </CardContent>
-      {status === BOOKING_STATUS.PENDING && (
+      {status === BOOKING_STATUS.PENDING && !isExpired && (
         <CardFooter className="py-4 px-6 flex gap-2">
           <Button
             className="flex-1 group/btn"
