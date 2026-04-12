@@ -42,3 +42,19 @@ export function logout() {
   pbUser.authStore.clear();
   pbAdmin.authStore.clear();
 }
+
+export async function updateUserProfile(userId: string, name: string) {
+  return pbUser.collection("users").update(userId, { name });
+}
+
+export async function updateUserPassword(
+  userId: string,
+  oldPassword: string,
+  newPassword: string,
+) {
+  return pbUser.collection("users").update(userId, {
+    oldPassword,
+    password: newPassword,
+    passwordConfirm: newPassword,
+  });
+}
