@@ -2,15 +2,17 @@ import type { AuthRecord } from "pocketbase";
 import { create } from "zustand";
 
 interface AuthState {
-  record: AuthRecord | null;
-  isValid: boolean;
-  isSuperuser: boolean;
+  userRecord: AuthRecord | null;
+  isUserValid: boolean;
+  adminRecord: AuthRecord | null;
+  isAdminValid: boolean;
   isInitialized: boolean;
 }
 
 export const useAuthStore = create<AuthState>()(() => ({
-  record: null,
-  isValid: false,
-  isSuperuser: false,
+  userRecord: null,
+  isUserValid: false,
+  adminRecord: null,
+  isAdminValid: false,
   isInitialized: false,
 }));

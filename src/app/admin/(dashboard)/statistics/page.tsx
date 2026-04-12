@@ -122,7 +122,7 @@ function StatCard({ title, value, sub, loading }: StatCardProps) {
 
 export default function StatisticsPage() {
   const [period, setPeriod] = useState<Period>("week");
-  const [direction, setDirection] = useState<Direction>("past");
+  const [direction, setDirection] = useState<Direction>("future");
 
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: services = [] } = useServices();

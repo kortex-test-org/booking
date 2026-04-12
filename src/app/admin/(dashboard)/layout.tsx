@@ -14,7 +14,7 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const { isValid, isSuperuser } = useAuth();
+  const { isAdminValid } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
@@ -23,12 +23,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }, []);
 
   useEffect(() => {
-    if (mounted && (!isValid || !isSuperuser)) {
+    if (mounted && !isAdminValid) {
       router.replace("/admin/login");
     }
-  }, [mounted, isValid, isSuperuser, router]);
+  }, [mounted, isAdminValid, router]);
 
-  if (!mounted || !isValid || !isSuperuser) return null;
+  if (!mounted || !isAdminValid) return null;
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/20">

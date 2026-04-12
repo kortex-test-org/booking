@@ -1,4 +1,4 @@
-export { loginAdmin, loginUser, logout, registerUser } from "./auth";
+export { loginAdmin, loginUser, logout, logoutAdmin, logoutUser, registerUser } from "./auth";
 export type { Booking, BookingStatus } from "./bookings";
 export {
   createBooking,
@@ -7,7 +7,7 @@ export {
   getUserBookings,
   updateBookingStatus,
 } from "./bookings";
-export { getAdminPb, pb } from "./pb";
+export { getAdminPb, pb, pbAdmin, pbUser } from "./pb";
 export type { Service } from "./services";
 export {
   createService,

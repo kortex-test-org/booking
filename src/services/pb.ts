@@ -1,11 +1,22 @@
-import PocketBase from "pocketbase";
+import PocketBase, { LocalAuthStore } from "pocketbase";
 
-export const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL);
+export const pbUser = new PocketBase(
+  process.env.NEXT_PUBLIC_POCKETBASE_URL,
+  new LocalAuthStore("pb_user_auth"),
+);
 
-// Sync auth state to cookie so middleware can read it for server-side redirects
+export const pbAdmin = new PocketBase(
+  process.env.NEXT_PUBLIC_POCKETBASE_URL,
+  new LocalAuthStore("pb_admin_auth"),
+);
+
+// pb is an alias for pbUser — all user-facing services use this
+export const pb = pbUser;
+
+// Sync user auth state to cookie so API routes can read the token server-side
 if (typeof window !== "undefined") {
-  pb.authStore.onChange(() => {
-    document.cookie = pb.authStore.exportToCookie({
+  pbUser.authStore.onChange(() => {
+    document.cookie = pbUser.authStore.exportToCookie({
       httpOnly: false,
       path: "/",
       secure: window.location.protocol === "https:",

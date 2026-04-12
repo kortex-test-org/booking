@@ -74,7 +74,7 @@ function BookingCardSkeleton() {
 }
 
 export function DashboardContent() {
-  const { isValid, isInitialized } = useAuth();
+  const { isInitialized } = useAuth();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [payingId, setPayingId] = useState<string | null>(null);
   const searchParams = useSearchParams();
