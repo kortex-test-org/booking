@@ -2,7 +2,7 @@
 
 import { BarChart2, CalendarCheck, LogOut, Menu, Scissors, X } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,6 @@ import { logoutAdmin } from "@/services/auth";
 
 function handleAdminLogout() {
   logoutAdmin();
-  window.location.href = "/admin/login";
 }
 
 const NAV_ITEMS = [
@@ -58,6 +57,10 @@ function NavLinks({ onNavigate }: NavLinksProps) {
 }
 
 export function AdminSidebar() {
+  function onAdminLogout() {
+    logoutAdmin("/");
+  }
+
   return (
     <aside className="hidden md:flex md:flex-col w-52 shrink-0 gap-2">
       <NavLinks />
@@ -65,7 +68,7 @@ export function AdminSidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
-          onClick={handleAdminLogout}
+          onClick={onAdminLogout}
         >
           <LogOut className="h-4 w-4 shrink-0" />
           Выйти из админки
@@ -81,6 +84,10 @@ interface MobileNavContentProps {
 
 function MobileNavContent({ onClose }: MobileNavContentProps) {
   const pathname = usePathname();
+
+  function onAdminLogout() {
+    logoutAdmin("/");
+  }
   return (
     <>
       <nav className="flex flex-col px-4 pt-6 pb-2 gap-3">
@@ -108,7 +115,7 @@ function MobileNavContent({ onClose }: MobileNavContentProps) {
         <Button
           variant="outline"
           className="w-full h-12 rounded-xl text-base gap-2 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
-          onClick={handleAdminLogout}
+          onClick={onAdminLogout}
         >
           <LogOut className="h-5 w-5" />
           Выйти из админки

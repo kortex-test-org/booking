@@ -25,8 +25,17 @@ export function logoutUser() {
   pbUser.authStore.clear();
 }
 
-export function logoutAdmin() {
+let adminLogoutRedirect = "/admin/login";
+
+export function logoutAdmin(redirectTo = "/admin/login") {
+  adminLogoutRedirect = redirectTo;
   pbAdmin.authStore.clear();
+}
+
+export function consumeAdminLogoutRedirect(): string {
+  const path = adminLogoutRedirect;
+  adminLogoutRedirect = "/admin/login";
+  return path;
 }
 
 export function logout() {

@@ -2,6 +2,7 @@
 
 import { Crown, LogOut } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,15 +12,15 @@ import { logoutUser, logoutAdmin } from "@/services/auth";
 export function Header() {
   const { isUserValid, isAdminValid, userRecord, isInitialized } = useAuth();
   const isAnyLoggedIn = isUserValid || isAdminValid;
+  const router = useRouter();
 
   function handleLogout() {
     logoutUser();
-    window.location.href = "/";
+    router.push("/");
   }
 
   function handleAdminLogout() {
     logoutAdmin();
-    window.location.href = "/";
   }
 
   return (

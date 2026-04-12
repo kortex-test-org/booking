@@ -8,6 +8,7 @@ import {
 } from "@/components/organisms/admin-sidebar";
 import { Header } from "@/components/organisms/header";
 import { useAuth } from "@/lib/auth-context";
+import { consumeAdminLogoutRedirect } from "@/services/auth";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -24,7 +25,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   useEffect(() => {
     if (mounted && !isAdminValid) {
-      router.replace("/admin/login");
+      router.replace(consumeAdminLogoutRedirect());
     }
   }, [mounted, isAdminValid, router]);
 
