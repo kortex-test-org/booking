@@ -1,19 +1,26 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { Crown, LogOut } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth-context";
-import { logout } from "@/services/auth";
+import { logoutUser, logoutAdmin } from "@/services/auth";
 
 export function Header() {
-  const { isValid, isSuperuser, record, isInitialized } = useAuth();
+  const { isUserValid, isAdminValid, userRecord, isInitialized } = useAuth();
+  const isAnyLoggedIn = isUserValid || isAdminValid;
+  const router = useRouter();
 
   function handleLogout() {
-    logout();
-    window.location.href = "/";
+    logoutUser();
+    router.push("/");
+  }
+
+  function handleAdminLogout() {
+    logoutAdmin();
   }
 
   return (
@@ -31,18 +38,19 @@ export function Header() {
             </div>
             Prime.
           </Link>
-          {isInitialized && isValid && (
+          {isInitialized && isAnyLoggedIn && (
             <nav className="flex items-center gap-1 animate-in fade-in duration-300">
-              {isSuperuser ? (
-                <Link href="/admin">
-                  <Button variant="ghost" className="font-medium">
-                    Админка
-                  </Button>
-                </Link>
-              ) : (
+              {isUserValid && (
                 <Link href="/dashboard">
                   <Button variant="ghost" className="font-medium">
                     Мои записи
+                  </Button>
+                </Link>
+              )}
+              {isAdminValid && (
+                <Link href="/admin">
+                  <Button variant="ghost" className="font-medium">
+                    Админка
                   </Button>
                 </Link>
               )}
@@ -51,12 +59,33 @@ export function Header() {
         </div>
         <div className="flex items-center gap-3">
           <ThemeToggle />
+          {isInitialized && isAdminValid && (
+            <div className="relative group">
+              <Link href="/admin">
+                <Button variant="ghost" size="icon">
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                </Button>
+              </Link>
+              <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 opacity-0 pointer-events-none scale-95 origin-top group-hover:opacity-100 group-hover:pointer-events-auto group-hover:scale-100 transition-all duration-200">
+                <div className="rounded-lg bg-popover shadow-md ring-1 ring-foreground/10 min-w-44">
+                  <button
+                    type="button"
+                    onClick={handleAdminLogout}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Выйти из админки
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {!isInitialized ? (
             <>
               <Skeleton className="hidden sm:block h-9 w-16 rounded-md" />
               <Skeleton className="h-9 w-16 rounded-md" />
             </>
-          ) : !isValid ? (
+          ) : !isUserValid ? (
             <div className="flex items-center gap-3 animate-in fade-in duration-300">
               <Link href="/login">
                 <Button
@@ -72,19 +101,21 @@ export function Header() {
             </div>
           ) : (
             <div className="flex items-center gap-3 animate-in fade-in duration-300">
-              <span className="hidden sm:inline text-xs text-muted-foreground font-medium">
-                {isSuperuser
-                  ? "Администратор"
-                  : (record?.name ?? record?.email)}
-              </span>
-              <Button
-                variant="ghost"
-                className="font-medium text-muted-foreground hover:text-foreground"
-                onClick={handleLogout}
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Выход
-              </Button>
+              {isUserValid && (
+                <>
+                  <span className="hidden sm:inline text-xs text-muted-foreground font-medium">
+                    {userRecord?.name ?? userRecord?.email}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    className="font-medium text-muted-foreground hover:text-foreground"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Выход
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>

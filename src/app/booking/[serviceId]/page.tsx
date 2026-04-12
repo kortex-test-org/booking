@@ -93,7 +93,7 @@ export default function BookingServicePage() {
   const { data: services = [], isLoading: isServicesLoading } = useServices();
   const { data: slots = [], isLoading: isSlotsLoading } = useTimeSlots();
   const service = services.find((s) => s.id === serviceId);
-  const { isValid, isInitialized } = useAuth();
+  const { isUserValid, isInitialized } = useAuth();
   const searchParams = useSearchParams();
   const { mutate: cancelBooking } = useUpdateBookingStatus();
 
@@ -107,12 +107,12 @@ export default function BookingServicePage() {
   }, [cancelledParam, bookingIdParam, cancelBooking]);
 
   useEffect(() => {
-    if (isInitialized && !isValid) {
+    if (isInitialized && !isUserValid) {
       const currentPath =
         typeof window !== "undefined" ? window.location.pathname : "";
       router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
     }
-  }, [isInitialized, isValid, router]);
+  }, [isInitialized, isUserValid, router]);
 
   const handleTimeSelect = (date: Date, time: string, slotId: string) => {
     setSelectedDateTime({ date, time, slotId });
@@ -157,7 +157,7 @@ export default function BookingServicePage() {
   };
 
   const showSkeleton =
-    !isInitialized || !isValid || isServicesLoading || isSlotsLoading;
+    !isInitialized || !isUserValid || isServicesLoading || isSlotsLoading;
 
   if (showSkeleton) {
     return <BookingPageSkeleton />;

@@ -8,13 +8,14 @@ import {
 } from "@/components/organisms/admin-sidebar";
 import { Header } from "@/components/organisms/header";
 import { useAuth } from "@/lib/auth-context";
+import { consumeAdminLogoutRedirect } from "@/services/auth";
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const { isValid, isSuperuser } = useAuth();
+  const { isAdminValid } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
@@ -23,12 +24,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }, []);
 
   useEffect(() => {
-    if (mounted && (!isValid || !isSuperuser)) {
-      router.replace("/admin/login");
+    if (mounted && !isAdminValid) {
+      router.replace(consumeAdminLogoutRedirect());
     }
-  }, [mounted, isValid, isSuperuser, router]);
+  }, [mounted, isAdminValid, router]);
 
-  if (!mounted || !isValid || !isSuperuser) return null;
+  if (!mounted || !isAdminValid) return null;
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/20">
