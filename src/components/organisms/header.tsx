@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
-import { ProfileSettingsDialog } from "@/components/molecules/ProfileSettingsDialog";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -38,29 +37,31 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto px-4 md:px-8 flex h-16 items-center justify-between">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="font-bold text-xl tracking-tighter hover:opacity-80 transition-opacity flex items-center gap-2"
-        >
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-black leading-none">
-              P
-            </span>
-          </div>
-          Prime.
-        </Link>
+        {/* Logo + Desktop nav */}
+        <div className="flex items-center gap-6">
+          <Link
+            href="/"
+            className="font-bold text-xl tracking-tighter hover:opacity-80 transition-opacity flex items-center gap-2"
+          >
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-black leading-none">
+                P
+              </span>
+            </div>
+            Prime.
+          </Link>
 
-        {/* Desktop nav */}
-        {isInitialized && isUserValid && (
-          <nav className="hidden sm:flex items-center gap-1 animate-in fade-in duration-300">
-            <Link href="/dashboard">
-              <Button variant="ghost" className="font-medium">
-                Мои записи
-              </Button>
-            </Link>
-          </nav>
-        )}
+          {/* Desktop nav */}
+          {isInitialized && isUserValid && (
+            <nav className="hidden sm:flex items-center gap-1 animate-in fade-in duration-300">
+              <Link href="/dashboard">
+                <Button variant="ghost" className="font-medium">
+                  Мои записи
+                </Button>
+              </Link>
+            </nav>
+          )}
+        </div>
 
         {/* Desktop right */}
         <div className="hidden sm:flex items-center gap-3">
@@ -110,13 +111,12 @@ export function Header() {
             </div>
           ) : (
             <div className="flex items-center gap-3 animate-in fade-in duration-300">
-              {userRecord && (
-                <ProfileSettingsDialog
-                  userId={userRecord.id}
-                  currentName={userRecord["name"] ?? ""}
-                  displayName={displayName}
-                />
-              )}
+              <Link
+                href="/dashboard/settings"
+                className="hidden sm:inline text-xs text-muted-foreground font-medium hover:text-foreground transition-colors"
+              >
+                {displayName}
+              </Link>
               <Button
                 variant="ghost"
                 className="font-medium text-muted-foreground hover:text-foreground"
@@ -168,16 +168,14 @@ export function Header() {
                     <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
                     Мои записи
                   </Link>
-
-                  {userRecord && (
-                    <ProfileSettingsDialog
-                      userId={userRecord.id}
-                      currentName={userRecord["name"] ?? ""}
-                      displayName={displayName}
-                      mobileMode
-                      onOpen={() => setMobileOpen(false)}
-                    />
-                  )}
+                  <Link
+                    href="/dashboard/settings"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-muted-foreground" />
+                    Настройки профиля
+                  </Link>
 
                   {isAdminValid && (
                     <>
