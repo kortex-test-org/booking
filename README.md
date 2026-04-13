@@ -1,36 +1,126 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Booking App
+
+A full-stack service booking platform with online payments, built with Next.js and PocketBase.
+
+## Features
+
+- Browse available services with real-time slot availability
+- Select a date and time slot via an interactive calendar
+- Secure online payments via Stripe Checkout
+- Personal dashboard to view and cancel bookings
+- Admin panel to manage services, time slots, and view statistics
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| UI | React 19, Tailwind CSS v4, shadcn/ui |
+| Backend | PocketBase (database + auth + REST API) |
+| Payments | Stripe Checkout |
+| Server state | TanStack React Query |
+| Client state | Zustand |
+| Language | TypeScript (strict) |
+| Runtime / Package manager | Bun |
+| Linter / Formatter | Biome |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- [Bun](https://bun.sh/) ≥ 1.0
+- A running PocketBase instance
+- A Stripe account (test or live keys)
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+bun install
+```
+
+### Environment variables
+
+Copy `example.env.local` to `.env.local` and fill in the values:
+
+```bash
+cp example.env.local .env.local
+```
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_POCKETBASE_URL` | PocketBase server URL |
+| `STRIPE_SECRET_KEY` | Stripe secret key (`sk_...`) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (`pk_...`) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (`whsec_...`) |
+| `POCKETBASE_ADMIN_EMAIL` | PocketBase superuser email (used by webhook) |
+| `POCKETBASE_ADMIN_PASSWORD` | PocketBase superuser password |
+
+### Run in development
+
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build for production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+bun build
+bun start
+```
 
-## Learn More
+### Docker
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+docker build -t booking-app .
+docker run -p 3000:3000 --env-file .env.local booking-app
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/              # Next.js App Router (pages and API routes)
+├── components/       # UI components following Atomic Design
+│   ├── ui/           # shadcn/ui primitives
+│   ├── atoms/        # Basic building blocks
+│   ├── molecules/    # Composed components (ServiceCard, BookingCard)
+│   ├── organisms/    # Complex sections (Header, TimeSlotPicker)
+│   └── templates/    # Page layouts
+├── queries/          # TanStack Query hooks
+├── services/         # PocketBase API client functions
+└── lib/              # Shared utilities, constants, auth context
+```
 
-## Deploy on Vercel
+## Database Schema
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Four PocketBase collections:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **`users`** — built-in PocketBase Auth
+- **`services`** — name, description, price (€), duration (minutes)
+- **`time_slots`** — date, time, relation to service
+- **`bookings`** — user, service, time slot, status (`pending` / `paid` / `cancelled`), Stripe payment ID
+
+## Booking Flow
+
+1. User browses services on the home page
+2. Selects a service → picks a date and time slot
+3. Clicks "Pay" → server creates a `pending` booking and opens a Stripe Checkout session
+4. User completes payment on Stripe
+5. Stripe sends a webhook → server verifies the signature → booking status updated to `paid`
+
+## Stripe Webhook
+
+The `/stripe-webhook` endpoint verifies each incoming request using a cryptographic signature (`stripe-signature` header + `STRIPE_WEBHOOK_SECRET`). Requests without a valid signature are rejected with `400`.
+
+## Scripts
+
+```bash
+bun dev          # Start development server
+bun build        # Build for production
+bun start        # Start production server
+bun lint         # Run Biome linter
+bun format       # Run Biome formatter
+bun typecheck    # Run TypeScript type check
+```
