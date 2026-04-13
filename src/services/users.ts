@@ -1,5 +1,5 @@
 import type { RecordModel } from "pocketbase";
-import { pb } from "./pb";
+import { pbAdmin } from "./pb";
 
 export interface User extends RecordModel {
   name: string;
@@ -7,5 +7,5 @@ export interface User extends RecordModel {
 }
 
 export async function getUsers(): Promise<User[]> {
-  return pb.collection("users").getFullList<User>({ sort: "name" });
+  return pbAdmin.collection("users").getFullList<User>({ sort: "name" });
 }

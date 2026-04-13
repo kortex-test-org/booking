@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type Booking,
+  adminUpdateBookingStatus,
   createBooking,
   deleteBooking,
   getBookings,
@@ -31,6 +32,18 @@ export function useUpdateBookingStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: bookingsKey });
       queryClient.invalidateQueries({ queryKey: userBookingsKey });
+      queryClient.invalidateQueries({ queryKey: ["time_slots"] });
+    },
+  });
+}
+
+export function useAdminUpdateBookingStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: Booking["status"] }) =>
+      adminUpdateBookingStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bookingsKey });
       queryClient.invalidateQueries({ queryKey: ["time_slots"] });
     },
   });

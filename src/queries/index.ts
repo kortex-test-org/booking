@@ -1,5 +1,6 @@
 export {
   bookingsKey,
+  useAdminUpdateBookingStatus,
   useBookings,
   useCreateBooking,
   useDeleteBooking,

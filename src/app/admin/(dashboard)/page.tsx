@@ -46,7 +46,7 @@ import {
   useBookings,
   useCreateBooking,
   useDeleteBooking,
-  useUpdateBookingStatus,
+  useAdminUpdateBookingStatus,
 } from "@/queries/bookings";
 import { useServices } from "@/queries/services";
 import {
@@ -118,7 +118,7 @@ export default function AdminDashboardPage() {
   const { data: users = [] } = useUsers();
   const createSlot = useCreateTimeSlot();
   const deleteSlot = useDeleteTimeSlot();
-  const updateStatus = useUpdateBookingStatus();
+  const updateStatus = useAdminUpdateBookingStatus();
   const deleteBooking = useDeleteBooking();
   const createBooking = useCreateBooking();
 
