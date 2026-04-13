@@ -1,5 +1,5 @@
 import type { RecordModel } from "pocketbase";
-import { getAdminPb, pb } from "./pb";
+import { getAdminPb, pb, pbAdmin } from "./pb";
 
 export interface TimeSlot extends RecordModel {
   service: string;
@@ -52,9 +52,9 @@ export async function createTimeSlot(data: {
   date: string;
   time: string;
 }): Promise<TimeSlot> {
-  return pb.collection("time_slots").create<TimeSlot>(data);
+  return pbAdmin.collection("time_slots").create<TimeSlot>(data);
 }
 
 export async function deleteTimeSlot(id: string): Promise<void> {
-  await pb.collection("time_slots").delete(id);
+  await pbAdmin.collection("time_slots").delete(id);
 }

@@ -7,6 +7,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -30,6 +31,15 @@ import type { TimeSlot } from "@/services/time-slots";
 
 type Period = "day" | "week" | "month" | "year";
 type Direction = "past" | "future";
+
+const SERVICE_COLORS = [
+  "#6366f1",
+  "#f59e0b",
+  "#10b981",
+  "#ef4444",
+  "#3b82f6",
+  "#ec4899",
+] as const;
 
 const PERIOD_LABEL: Record<Period, string> = {
   day: "День",
@@ -510,7 +520,14 @@ const loading = bookingsLoading;
                   name="Броней"
                   radius={[0, 4, 4, 0]}
                   fill="var(--primary)"
-                />
+                >
+                  {topServices.map((entry, index) => (
+                    <Cell
+                      key={entry.name}
+                      fill={SERVICE_COLORS[index % SERVICE_COLORS.length]}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -563,7 +580,14 @@ const loading = bookingsLoading;
                   name="Доход"
                   radius={[4, 4, 0, 0]}
                   fill="#22c55e"
-                />
+                >
+                  {topServices.map((entry, index) => (
+                    <Cell
+                      key={entry.name}
+                      fill={SERVICE_COLORS[index % SERVICE_COLORS.length]}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}

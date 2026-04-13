@@ -1,6 +1,6 @@
 import type { RecordModel } from "pocketbase";
 import type { BookingStatus } from "@/lib/constants";
-import { pb } from "./pb";
+import { pb, pbAdmin } from "./pb";
 import type { TimeSlot } from "./time-slots";
 
 export type { BookingStatus };
@@ -25,11 +25,11 @@ export async function createBooking(data: {
   time_slot: string;
   status: Booking["status"];
 }): Promise<Booking> {
-  return pb.collection("bookings").create<Booking>(data);
+  return pbAdmin.collection("bookings").create<Booking>(data);
 }
 
 export async function getBookings(): Promise<Booking[]> {
-  return pb.collection("bookings").getFullList<Booking>({
+  return pbAdmin.collection("bookings").getFullList<Booking>({
     expand: "user,service,time_slot",
   });
 }
@@ -48,6 +48,13 @@ export async function updateBookingStatus(
   return pb.collection("bookings").update<Booking>(id, { status });
 }
 
+export async function adminUpdateBookingStatus(
+  id: string,
+  status: Booking["status"],
+): Promise<Booking> {
+  return pbAdmin.collection("bookings").update<Booking>(id, { status });
+}
+
 export async function deleteBooking(id: string): Promise<void> {
-  await pb.collection("bookings").delete(id);
+  await pbAdmin.collection("bookings").delete(id);
 }
